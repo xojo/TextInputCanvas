@@ -1,0 +1,310 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D800BA0C171704E900D8B933 /* rb_plugin_cocoa.h in Headers */ = {isa = PBXBuildFile; fileRef = D800BA0B171704E900D8B933 /* rb_plugin_cocoa.h */; };
+		D800BA0E171704F300D8B933 /* PluginMainCocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = D800BA0D171704F300D8B933 /* PluginMainCocoa.mm */; };
+		D811CEEC1533A21D00A04328 /* PluginMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D811CEE71533A21D00A04328 /* PluginMain.cpp */; };
+		D811CEED1533A21D00A04328 /* rb_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = D811CEE81533A21D00A04328 /* rb_plugin.h */; };
+		D811CEEE1533A21D00A04328 /* RBCarbonHeaders.h in Headers */ = {isa = PBXBuildFile; fileRef = D811CEE91533A21D00A04328 /* RBCarbonHeaders.h */; };
+		D811CEEF1533A21D00A04328 /* RBCocoaHeaders.h in Headers */ = {isa = PBXBuildFile; fileRef = D811CEEA1533A21D00A04328 /* RBCocoaHeaders.h */; };
+		D811CEF01533A21D00A04328 /* REALplugin.h in Headers */ = {isa = PBXBuildFile; fileRef = D811CEEB1533A21D00A04328 /* REALplugin.h */; };
+		D811CF041533D76C00A04328 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D811CF031533D76C00A04328 /* AppKit.framework */; };
+		D87A5B021757F50900F7D7B7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D87A5AFB1757F50900F7D7B7 /* main.cpp */; };
+		D87A5B031757F50900F7D7B7 /* RBXTextInputView.h in Headers */ = {isa = PBXBuildFile; fileRef = D87A5AFC1757F50900F7D7B7 /* RBXTextInputView.h */; };
+		D87A5B041757F50900F7D7B7 /* RBXTextInputView.mm in Sources */ = {isa = PBXBuildFile; fileRef = D87A5AFD1757F50900F7D7B7 /* RBXTextInputView.mm */; };
+		D87A5B051757F50900F7D7B7 /* TextInputCanvas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D87A5AFE1757F50900F7D7B7 /* TextInputCanvas.cpp */; };
+		D87A5B061757F50900F7D7B7 /* TextInputCanvas.h in Headers */ = {isa = PBXBuildFile; fileRef = D87A5AFF1757F50900F7D7B7 /* TextInputCanvas.h */; };
+		D87A5B071757F50900F7D7B7 /* TextRange.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D87A5B001757F50900F7D7B7 /* TextRange.cpp */; };
+		D87A5B081757F50900F7D7B7 /* TextRange.h in Headers */ = {isa = PBXBuildFile; fileRef = D87A5B011757F50900F7D7B7 /* TextRange.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D800BA0B171704E900D8B933 /* rb_plugin_cocoa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rb_plugin_cocoa.h; sourceTree = "<group>"; };
+		D800BA0D171704F300D8B933 /* PluginMainCocoa.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PluginMainCocoa.mm; sourceTree = "<group>"; };
+		D811CEDA1533A20100A04328 /* IDEUtils.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = IDEUtils.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		D811CEE71533A21D00A04328 /* PluginMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PluginMain.cpp; sourceTree = "<group>"; };
+		D811CEE81533A21D00A04328 /* rb_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rb_plugin.h; sourceTree = "<group>"; };
+		D811CEE91533A21D00A04328 /* RBCarbonHeaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RBCarbonHeaders.h; sourceTree = "<group>"; };
+		D811CEEA1533A21D00A04328 /* RBCocoaHeaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RBCocoaHeaders.h; sourceTree = "<group>"; };
+		D811CEEB1533A21D00A04328 /* REALplugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REALplugin.h; sourceTree = "<group>"; };
+		D811CF031533D76C00A04328 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		D87A5AFB1757F50900F7D7B7 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D87A5AFC1757F50900F7D7B7 /* RBXTextInputView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RBXTextInputView.h; sourceTree = "<group>"; };
+		D87A5AFD1757F50900F7D7B7 /* RBXTextInputView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RBXTextInputView.mm; sourceTree = "<group>"; };
+		D87A5AFE1757F50900F7D7B7 /* TextInputCanvas.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = TextInputCanvas.cpp; sourceTree = "<group>"; };
+		D87A5AFF1757F50900F7D7B7 /* TextInputCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextInputCanvas.h; sourceTree = "<group>"; };
+		D87A5B001757F50900F7D7B7 /* TextRange.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextRange.cpp; sourceTree = "<group>"; };
+		D87A5B011757F50900F7D7B7 /* TextRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextRange.h; sourceTree = "<group>"; };
+		D87A5B0A1757F5B800F7D7B7 /* Exports.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; name = Exports.exp; path = src/Exports.exp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D811CED71533A20100A04328 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D811CF041533D76C00A04328 /* AppKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D811CECF1533A20100A04328 = {
+			isa = PBXGroup;
+			children = (
+				D811CEF31533A2F000A04328 /* Source */,
+				D811CEE11533A21D00A04328 /* Plugins SDK */,
+				D87A5B091757F55F00F7D7B7 /* Misc */,
+				D811CF051533D77400A04328 /* Frameworks */,
+				D811CEDB1533A20100A04328 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D811CEDB1533A20100A04328 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D811CEDA1533A20100A04328 /* IDEUtils.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D811CEE11533A21D00A04328 /* Plugins SDK */ = {
+			isa = PBXGroup;
+			children = (
+				D811CEE51533A21D00A04328 /* Glue Code */,
+				D811CEE61533A21D00A04328 /* Includes */,
+			);
+			name = "Plugins SDK";
+			path = sdk;
+			sourceTree = SOURCE_ROOT;
+		};
+		D811CEE51533A21D00A04328 /* Glue Code */ = {
+			isa = PBXGroup;
+			children = (
+				D811CEE71533A21D00A04328 /* PluginMain.cpp */,
+				D800BA0D171704F300D8B933 /* PluginMainCocoa.mm */,
+			);
+			path = "Glue Code";
+			sourceTree = "<group>";
+		};
+		D811CEE61533A21D00A04328 /* Includes */ = {
+			isa = PBXGroup;
+			children = (
+				D811CEE81533A21D00A04328 /* rb_plugin.h */,
+				D800BA0B171704E900D8B933 /* rb_plugin_cocoa.h */,
+				D811CEE91533A21D00A04328 /* RBCarbonHeaders.h */,
+				D811CEEA1533A21D00A04328 /* RBCocoaHeaders.h */,
+				D811CEEB1533A21D00A04328 /* REALplugin.h */,
+			);
+			path = Includes;
+			sourceTree = "<group>";
+		};
+		D811CEF31533A2F000A04328 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				D87A5AFB1757F50900F7D7B7 /* main.cpp */,
+				D87A5AFC1757F50900F7D7B7 /* RBXTextInputView.h */,
+				D87A5AFD1757F50900F7D7B7 /* RBXTextInputView.mm */,
+				D87A5AFE1757F50900F7D7B7 /* TextInputCanvas.cpp */,
+				D87A5AFF1757F50900F7D7B7 /* TextInputCanvas.h */,
+				D87A5B001757F50900F7D7B7 /* TextRange.cpp */,
+				D87A5B011757F50900F7D7B7 /* TextRange.h */,
+			);
+			name = Source;
+			path = src;
+			sourceTree = "<group>";
+		};
+		D811CF051533D77400A04328 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D811CF031533D76C00A04328 /* AppKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D87A5B091757F55F00F7D7B7 /* Misc */ = {
+			isa = PBXGroup;
+			children = (
+				D87A5B0A1757F5B800F7D7B7 /* Exports.exp */,
+			);
+			name = Misc;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D811CED81533A20100A04328 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D811CEED1533A21D00A04328 /* rb_plugin.h in Headers */,
+				D811CEEE1533A21D00A04328 /* RBCarbonHeaders.h in Headers */,
+				D811CEEF1533A21D00A04328 /* RBCocoaHeaders.h in Headers */,
+				D811CEF01533A21D00A04328 /* REALplugin.h in Headers */,
+				D800BA0C171704E900D8B933 /* rb_plugin_cocoa.h in Headers */,
+				D87A5B031757F50900F7D7B7 /* RBXTextInputView.h in Headers */,
+				D87A5B061757F50900F7D7B7 /* TextInputCanvas.h in Headers */,
+				D87A5B081757F50900F7D7B7 /* TextRange.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D811CED91533A20100A04328 /* IDEUtils */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D811CEDE1533A20100A04328 /* Build configuration list for PBXNativeTarget "IDEUtils" */;
+			buildPhases = (
+				D811CED61533A20100A04328 /* Sources */,
+				D811CED71533A20100A04328 /* Frameworks */,
+				D811CED81533A20100A04328 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IDEUtils;
+			productName = IDEUtils;
+			productReference = D811CEDA1533A20100A04328 /* IDEUtils.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D811CED11533A20100A04328 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0450;
+				ORGANIZATIONNAME = "";
+			};
+			buildConfigurationList = D811CED41533A20100A04328 /* Build configuration list for PBXProject "TextInputCanvas" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D811CECF1533A20100A04328;
+			productRefGroup = D811CEDB1533A20100A04328 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D811CED91533A20100A04328 /* IDEUtils */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D811CED61533A20100A04328 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D811CEEC1533A21D00A04328 /* PluginMain.cpp in Sources */,
+				D800BA0E171704F300D8B933 /* PluginMainCocoa.mm in Sources */,
+				D87A5B021757F50900F7D7B7 /* main.cpp in Sources */,
+				D87A5B041757F50900F7D7B7 /* RBXTextInputView.mm in Sources */,
+				D87A5B051757F50900F7D7B7 /* TextInputCanvas.cpp in Sources */,
+				D87A5B071757F50900F7D7B7 /* TextRange.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D811CEDC1533A20100A04328 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D811CEDD1533A20100A04328 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D811CEDF1533A20100A04328 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				EXPORTED_SYMBOLS_FILE = "$(PROJECT_DIR)/src/Exports.exp";
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/sdk/Includes/RBCocoaHeaders.h";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D811CEE01533A20100A04328 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				EXPORTED_SYMBOLS_FILE = "$(PROJECT_DIR)/src/Exports.exp";
+				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/sdk/Includes/RBCocoaHeaders.h";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D811CED41533A20100A04328 /* Build configuration list for PBXProject "TextInputCanvas" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D811CEDC1533A20100A04328 /* Debug */,
+				D811CEDD1533A20100A04328 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D811CEDE1533A20100A04328 /* Build configuration list for PBXNativeTarget "IDEUtils" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D811CEDF1533A20100A04328 /* Debug */,
+				D811CEE01533A20100A04328 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D811CED11533A20100A04328 /* Project object */;
+}

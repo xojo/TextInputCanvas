@@ -1,0 +1,205 @@
+REAL SOFTWARE INCORPORATED
+
+PLUG-IN SOFTWARE DEVELOPMENT KIT END USER LICENSE AGREEMENT
+
+Notice to user: THIS IS A CONTRACT BETWEEN YOU AND REAL SOFTWARE 
+INCORPORATED ("REAL SOFTWARE"), A TEXAS, U.S.A. CORPORATION. BY INDICATING 
+YOUR ACCEPTANCE BELOW, YOU ACCEPT ALL THE TERMS AND CONDITIONS OF 
+THIS LICENSE AGREEMENT. This License Agreement accompanies REAL Software's 
+Plug-In Software Development Kit ("SDK") and related explanatory 
+materials and includes any upgrades, modified versions, updates, 
+additions, and copies of the SDK licensed to You by REAL Software. This copy 
+of the SDK is licensed to You as the end user or to Your employer or 
+another third party authorized to permit Your use of the SDK.
+
+1.	DEFINITIONS. In this License Agreement, SDK means the API 
+development software, Sample Code, Tools, Documentation, and other 
+items, all as delivered to you by REAL Software and included within the 
+Plug-In SDK folder when installed. The Plug-In software placed on 
+your computer by executing the REALbasic installer is NOT included as 
+part of the SDK.  Only those items placed on your computer by 
+executing the SDK installer are part of the SDK. REAL Software Products refer 
+to REAL Software's application programs and software such as REALbasic 
+Plug-Ins which are or may be made available for licensing to the 
+general public, including any modified versions or upgrades thereof. 
+API development software means that software in the API folder in 
+object code format, not otherwise made available by REAL Software as a 
+commercial product, that REAL Software has included for You as part of the 
+SDK to distribute unmodified with Your application programs. Sample 
+Code means software code that REAL Software has included for You to 
+incorporate into Your application programs. Tools refer to programs 
+and Utilities that may be included for You to test or compile Your 
+application programs. REAL Software means REAL Software Systems Incorporated. 
+Developer, You and Your refer to any person or entity acquiring or 
+using the SDK under the terms of this License Agreement.
+
+2.	ROYALTY-FREE LICENSE.  Subject to the restrictions contained 
+in this Section 2, REAL Software grants to You a nonexclusive, 
+nontransferable, royalty-free license to use the items in the SDK 
+only for the purpose of internal development of application programs 
+designed to function with REAL Software products.
+
+Under this License, You may use, modify or merge all or portions of 
+the Sample Code with Your application programs and distribute it only 
+as part of Your products in object code form. Any modified or merged 
+portion of the Sample Code is subject to this License Agreement. You 
+are required to include REAL Software's copyright notices on Your application 
+programs except for those programs in which You include a copyright 
+notice reflecting the copyright ownership of Developer in such 
+programs. You may not use REAL Software's name, logo or trademarks to market 
+Your products. You may not assign Your rights or obligations granted 
+under this License Agreement without the prior written consent of 
+REAL Software.  Any attempted assignment or transfer without such prior 
+written consent from REAL Software shall be void and of no effect.
+
+You may use the REAL Software Products included in the SDK, if any, subject 
+to End User Licenses or conditions stated on the specific REAL Software 
+Product. You may use the Tools, accompanying materials or other items 
+in the SDK solely for the purpose of internal development. You may 
+not include REAL Software Products and Tools and accompanying materials in 
+the SDK in Developers products under this License Agreement. You may 
+not sell, sublicense, rent, loan or lease the REAL Software Products, Tools 
+and accompanying materials in the SDK to any third party. You may not 
+reverse engineer, decompile or disassemble any REAL Software Products, API 
+development software or Tools that are supplied to You under this 
+License Agreement. To the extent that local law grants You the right 
+to decompile software in order to obtain information necessary to 
+render the software interoperable with other software, You shall 
+first request to REAL Software in writing to provide You with the necessary 
+information. REAL Software has the right to impose reasonable conditions such 
+as a reasonable fee for doing so. Requests for information should be 
+directed to the REAL Software at the address provided in the SDK or such 
+other address made available on realsoftware.com from time to time.
+
+
+You may make a limited number of copies of the SDK to be used by Your 
+employees or consultants as provided herein, and not for general 
+business purposes, and such employees or consultants shall be subject 
+to this License Agreement.
+
+You may use API development software only as provided in the REAL Software 
+specification applicable thereto, and distribute it solely with Your 
+products on the same media. You may not modify API development 
+software. The API development software may be distributed to Your 
+customers under the terms of Your standard End User License Agreement 
+provided it includes terms which are substantially similar to those 
+applicable to the API development software, as described herein.
+
+3.	PROPRIETARY RIGHTS.  The items in the SDK are the 
+intellectual property of REAL Software and its suppliers and are protected by 
+United States copyright and patent law, international treaty 
+provisions and applicable laws of the country in which it is being 
+used. You agree to protect all copyright and other ownership 
+interests of REAL Software and/or its suppliers in all items in the SDK 
+supplied under this License Agreement. You agree that all copies of 
+the items in the SDK, reproduced for any reason by You, contain the 
+same copyright notices, and other proprietary notices as appropriate, 
+as appear on or in the
+master items delivered by REAL Software in the SDK. REAL Software and/or its 
+suppliers retain title and ownership of the items in the SDK, the 
+media on which it is recorded, and all subsequent copies, regardless 
+of the form or media in or on which the original and other copies may 
+exist. Except as stated above, this License Agreement does not grant 
+You any rights to patents, copyrights, trade secrets, trademarks or 
+any other rights in respect to the items in the SDK.
+
+4.	TERM.   This License Agreement is effective until terminated. 
+REAL Software has the right to terminate Your License immediately, without 
+judicial intervention, if You fail to comply with any term of this 
+License Agreement. Upon any such termination You must return all full 
+and partial copies of the items in the SDK immediately to REAL Software.
+
+5.	DISCLAIMER OF WARRANTY.   REAL Software licenses the API development 
+software, Sample Code and other items in the SDK to Developer only on 
+an "as is" basis. REAL Software makes no representation with respect to the 
+adequacy of the API development software, Sample Code and other items 
+in the SDK used in the development of Developers products for any 
+particular purpose or with respect to their adequacy to produce any 
+particular result. REAL Software and its suppliers shall not be liable for 
+loss or damage arising out of this License Agreement or from the 
+distribution or use of Developers products containing portions of the 
+Sample Code, API development software or from any of the other items 
+in the SDK. REAL SOFTWARE AND ITS SUPPLIERS DISCLAIM ALL WARRANTIES, EITHER 
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES 
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE OR 
+NONINFRINGEMENT OF ANY THIRD PARTY RIGHT IN RESPECT OF THE ITEMS IN 
+THE SDK OR ANY SERVICES RELATED TO THE SDK.
+
+Some states or jurisdictions do not allow the exclusion or limitation 
+of incidental, consequential or special damages, or the exclusion of 
+implied warranties or limitations on how long an implied warranty may 
+last, so the above limitations may not apply to You. You may have 
+rights which vary from state to state or jurisdiction to 
+jurisdiction. The foregoing does not affect or prejudice Your 
+statutory rights. To the extent permissible any implied warranties 
+are limited to ninety (90) days. For further warranty information You 
+may contact REAL Software's Customer Support Department, at REAL Software 
+Incorporated, PMB 220, 3300 Bee Caves Road, Suite 640, Austin, TX 78746.
+
+REAL Software is under no obligation to provide any support under this 
+License Agreement, including upgrades or future versions of Sample 
+Code, API development software or other items in the SDK, to 
+Developer, end user or to any other party. REAL Software is acting on behalf 
+of its suppliers for the purpose of disclaiming, excluding and/or 
+restricting obligations, warranties and liability as provided in this 
+Clause 5, but in no other respects and for no other purpose.
+
+6.	LIMITATION OF LIABILITY.   Notwithstanding any other 
+provisions of this License Agreement, REAL Software's liability to You under 
+this License Agreement shall be limited to the amount paid by You for 
+the SDK.
+
+IN NO EVENT WILL REAL Software BE LIABLE TO YOU FOR ANY CONSEQUENTIAL, 
+INCIDENTAL OR SPECIAL DAMAGES INCLUDING DAMAGES FOR ANY LOST PROFITS, 
+LOST SAVINGS, LOSS OF DATA, COSTS, FEES OR EXPENSES OF ANY KIND OR 
+NATURE ARISING OUT OF ANY PROVISION OF THIS LICENSE AGREEMENT OR THE 
+USE OR INABILITY TO USE THE ITEMS IN THE SDK, EVEN IF AN REAL Software 
+REPRESENTATIVE HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, 
+OR FOR ANY CLAIM BY ANY PARTY. Some jurisdictions do not allow the 
+exclusion or limitation of incidental, consequential or special 
+damages, so the above limitation or exclusion may not apply to You. 
+Nothing contained in this Agreement shall prejudice the statutory 
+rights of any party dealing as a consumer.
+
+7.	INDEMNIFICATION.  Developer agrees to indemnify, hold 
+harmless, and defend REAL Software from and against any claims or lawsuits, 
+including attorneys' fees, that arise or result from the use or 
+distribution of Developer's products containing Sample Code or API 
+development software, provided that REAL Software gives Developer prompt 
+written notice of any such claim, tenders to Developer the defense or 
+settlement of such a claim at Developer's expense and cooperates with 
+Developer, at Developer expense, in defending or settling such claim.
+
+8.	CHOICE OF LAW.  This License Agreement shall be governed by 
+the laws in force in the State of California in the United States, 
+excluding the application of its conflict of law rules. This License 
+Agreement shall not be governed by the United Nations Convention on 
+Contracts for the International Sale of Goods, the application of 
+which is expressly excluded.
+
+9.	U.S. GOVERNMENT REGULATIONS.  You agree that any Developer 
+product that includes Sample Code or API development software (i) 
+will include in its license agreement a reference to applicable U.S. 
+Government regulations that control licensing of software, and (ii) 
+will not be shipped, transferred or exported into any country or used 
+in any manner prohibited by the United States Export Administration 
+Act.
+
+10.	WAIVER. None of the provisions of this License Agreement 
+shall be deemed to have been waived by any act or acquiescence on the 
+part of REAL Software, its agents or employees, but only by an instrument in 
+writing signed by an officer of REAL Software.
+
+11.	INTEGRATION.  When conflicting language exists between this 
+License Agreement and any other agreement included in the SDK, this 
+License Agreement shall supersede. If either REAL Software or Developer 
+employs attorneys to enforce any rights arising out of or relating to 
+this License Agreement, the prevailing party shall be entitled to 
+recover reasonable attorneys' fees. You acknowledge that You have 
+read this License Agreement, understand it and that it is the 
+complete and exclusive statement of Your agreement with REAL Software which 
+supersedes any prior agreement, oral or written, between REAL Software and 
+You with respect to the licensing to You of the SDK. No variation of 
+the terms of this License Agreement will be enforceable against REAL Software 
+unless REAL Software gives its express consent, in writing signed by an 
+officer of REAL Software.
