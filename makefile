@@ -16,8 +16,8 @@ INCLUDE =	-iquote$(SDKINCLUDEDIR) \
 		-iquote./
 		
 
-GTKINCLUDES = `pkg-config --cflags gtk+-2.0`
-GTKLIBS = `pkg-config --libs gtk+-2.0`
+GTKINCLUDES = `pkg-config --cflags gtk+-3.0`
+GTKLIBS = `pkg-config --libs gtk+-3.0`
 
 LIBS = $(GTKLIBS)
 
