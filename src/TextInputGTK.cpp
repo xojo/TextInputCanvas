@@ -112,7 +112,7 @@ void TextInputGTK::Setup()
 			g_signal_connect_data( mContext, "preedit_start", (GCallback)PreEditStartCallback, mControl, NULL, GConnectFlags(0) );
 
 			GtkWidget *widget = reinterpret_cast<GtkWidget *>(handle);
-			gtk_im_context_set_client_window( mContext, widget->window );
+			gtk_im_context_set_client_window( mContext, gtk_widget_get_window(widget) );
 		}
 	}
 }
