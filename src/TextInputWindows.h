@@ -13,9 +13,10 @@ class TextInputWindows
 {
   private:
 	REALcontrolInstance mControl;
+	HWND mWindow = nullptr;
 
   public:
-	LONG OldWndProc;
+	LONG_PTR OldWndProc;
 
 	TextInputWindows( REALcontrolInstance control );
 	~TextInputWindows();

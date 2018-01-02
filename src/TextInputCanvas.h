@@ -23,7 +23,7 @@ void FireInsertText( REALcontrolInstance control, REALstring text,
 bool FireIsEditable( REALcontrolInstance control );
 bool FireIsOverwriteMode( REALcontrolInstance control );
 bool FireKeyFallsThrough( REALcontrolInstance control, REALstring key );
-void FirePaint( REALcontrolInstance control, REALgraphics context, const Rect *rects, int rectCount );
+void FirePaint(REALcontrolInstance control, REALgraphics context, const Rect *rects, int rectCount);
 REALobject FireRectForRange( REALcontrolInstance control, REALobject *range );
 REALobject FireSelectedRange( REALcontrolInstance control );
 REALstring FireTextForRange( REALcontrolInstance control, REALobject range );

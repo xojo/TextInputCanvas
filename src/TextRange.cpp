@@ -5,7 +5,6 @@
 //
 
 #include "TextRange.h"
-typedef int RBInteger;
 
 static void TextRangeConstructor( REALobject range );
 static void TextRangeConstructorWRange( REALobject range, RBInteger location, RBInteger length );
@@ -19,24 +18,24 @@ struct TextRangeData
 };
 
 static REALproperty sTextRangeProperties[] = {
-	{ NULL, "Location", "Integer", 0, REALstandardGetter, REALstandardSetter, FieldOffset(TextRangeData, location) },
-	{ NULL, "Length", "Integer", 0, REALstandardGetter, REALstandardSetter, FieldOffset(TextRangeData, length) },
-	{ NULL, "EndLocation", "Integer", 0, (REALproc)TextRangeGetEnd, (REALproc)TextRangeSetEnd } 
+	{ nullptr, "Location", "Integer", 0, REALstandardGetter, REALstandardSetter, FieldOffset(TextRangeData, location) },
+	{ nullptr, "Length", "Integer", 0, REALstandardGetter, REALstandardSetter, FieldOffset(TextRangeData, length) },
+	{ nullptr, "EndLocation", "Integer", 0, (REALproc)TextRangeGetEnd, (REALproc)TextRangeSetEnd } 
 };
 
 static REALmethodDefinition sTextRangeMethods[] = {
-	{ (REALproc)TextRangeConstructor, NULL, "Constructor()" },
-	{ (REALproc)TextRangeConstructorWRange, NULL, "Constructor( location as integer, length as integer )" }
+	{ (REALproc)TextRangeConstructor, nullptr, "Constructor()" },
+	{ (REALproc)TextRangeConstructorWRange, nullptr, "Constructor( location as integer, length as integer )" }
 };
 
 static REALclassDefinition sTextRangeClass = {
 	kCurrentREALControlVersion,
 	"TextRange",
-	NULL, // superclass
+	nullptr, // superclass
 	sizeof(TextRangeData),
 	0, // forSystemUse
-	NULL, // constructor
-	NULL, // destructor
+	nullptr, // constructor
+	nullptr, // destructor
 	sTextRangeProperties, sizeof(sTextRangeProperties) / sizeof(sTextRangeProperties[0]),
 	sTextRangeMethods, sizeof(sTextRangeMethods) / sizeof(sTextRangeMethods[0])
 };
@@ -66,7 +65,8 @@ static void TextRangeSetEnd( REALobject range, RBInteger end )
 
 REALobject CreateTextRange( int begin, int length )
 {
-	REALobject object = REALnewInstance( sTextRangeClass.name );
+	static REALclassRef rangeClass = REALGetClassRef(sTextRangeClass.name);
+	REALobject object = REALnewInstance(rangeClass);
 	TextRangeData *data = (TextRangeData *)REALGetClassData( object, &sTextRangeClass );
 	data->location = begin;
 	data->length = length;

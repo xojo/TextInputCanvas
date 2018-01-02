@@ -23,12 +23,13 @@ class TextInputGTK
 	void Setup();
 	void TearDown();
 
-	bool FilterKeyPress();
+	bool KeyDown();
 	void GotFocus();
 	void LostFocus();
 	void SelectInputMethod();
 
 	static void CommitCallback( GtkIMContext *context, gchar *str, gpointer userData );
+	static gboolean KeyPressCallBack( GtkWidget *widget, GdkEventKey *event, TextInputGTK *input );
 	static void PreEditChangedCallback( GtkIMContext *context, gpointer userData );
 	static void PreEditStartCallback( GtkIMContext *context, gpointer userData );
 };

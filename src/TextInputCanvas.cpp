@@ -29,16 +29,19 @@
 
 static REALclassRef sRectClass;
 
-static bool IsTextKey( int keycode, int modifiers );
 static void InvalidateTextRects( REALcontrolInstance control );
 static void LinuxSelectInputMethod( REALcontrolInstance control );
 
-static Boolean KeyDownEvent( REALcontrolInstance control, int charCode, int keyCode, int modifiers );
+static RBBoolean KeyDownEvent( REALcontrolInstance control, int charCode, int keyCode, int modifiers );
+#if WIDGET_GTK
+static bool IsTextKey( int keycode, int modifiers );
+	static RBBoolean UnfilteredKeyDownEvent( REALcontrolInstance control, int keyCode, int modifiers );
+#endif
 static void Initializer( REALcontrolInstance control );
 static void OpenEvent( REALcontrolInstance control );
 static void CloseEvent( REALcontrolInstance control );
-static unsigned long HandleGetter( REALcontrolInstance control );
-static Boolean MouseDown( REALcontrolInstance inst, int x, int y, int modifiers );
+static void *HandleGetter( REALcontrolInstance control );
+static RBBoolean MouseDown( REALcontrolInstance inst, int x, int y, int modifiers );
 static void MouseDrag( REALcontrolInstance inst, int x, int y );
 static void MouseUp( REALcontrolInstance inst, int x, int y );
 static void GotFocus( REALcontrolInstance control );
@@ -47,7 +50,7 @@ static void EnableMenuItems( REALcontrolInstance control );
 
 static void FirePaintStub( REALcontrolInstance control, REALgraphics gfx )
 {
-	FirePaint( control, gfx, NULL, 0 );
+	FirePaint( control, gfx, nullptr, 0 );
 }
 
 // MARK: - TextInputCanvas declarations
@@ -65,8 +68,8 @@ struct InputCanvasData {
 };
 
 static REALmethodDefinition sInputCanvasMethods[] = {
-	{ (REALproc)InvalidateTextRects, NULL, "InvalidateTextRects()" },
-	{ (REALproc)LinuxSelectInputMethod, NULL, "LinuxSelectInputMethod()" }
+	{ (REALproc)InvalidateTextRects, nullptr, "InvalidateTextRects()" },
+	{ (REALproc)LinuxSelectInputMethod, nullptr, "LinuxSelectInputMethod()" }
 };
 
 static REALevent sInputCanvasEvents[] = {
@@ -231,7 +234,7 @@ static REALconstant sInputCanvasConstants[] = {
 
 static REALcontrolBehaviour sInputCanvasBehavior = {
 	Initializer,
-	NULL, // destructorFunction
+	nullptr, // destructorFunction
 	FirePaintStub,
 	MouseDown,
 	MouseDrag,
@@ -241,23 +244,26 @@ static REALcontrolBehaviour sInputCanvasBehavior = {
 	KeyDownEvent,
 	OpenEvent,
 	CloseEvent,
-	NULL, // backgroundIdleFunction
-	NULL, // drawOffscreenFunction
-	NULL, // setSpecialBackground
-	NULL, // constantChanging
-	NULL, // droppedNewInstance
-	NULL, // mouseEnterFunction
-	NULL, // mouseExitFunction
-	NULL, // mouseMoveFunction
-	NULL, // stateChangedFunction
-	NULL, // actionEventFunction
+	nullptr, // backgroundIdleFunction
+	nullptr, // drawOffscreenFunction
+	nullptr, // setSpecialBackground
+	nullptr, // constantChanging
+	nullptr, // droppedNewInstance
+	nullptr, // mouseEnterFunction
+	nullptr, // mouseExitFunction
+	nullptr, // mouseMoveFunction
+	nullptr, // stateChangedFunction
+	nullptr, // actionEventFunction
 	HandleGetter,
-	NULL, // mouseWheelFunction
+	nullptr, // mouseWheelFunction
 	EnableMenuItems,
-	NULL, // menuItemActionFunction
-	NULL, // controlAcceptFocus
-	NULL, // keyUpFunction,
-	FirePaint
+	nullptr, // menuItemActionFunction
+	nullptr, // controlAcceptFocus
+	nullptr, // keyUpFunction,
+	FirePaint,
+#if WIDGET_GTK
+	UnfilteredKeyDownEvent
+#endif
 };
 
 static REALcontrol sInputCanvasControl = {
@@ -267,14 +273,14 @@ static REALcontrol sInputCanvasControl = {
 	REALcontrolAcceptFocus | REALcontrolHandlesKeyboardNavigation | REALdontEraseBackground, // flags
 	0, 0, // unused (toolbar pict)
 	100, 100, // default width/height
-	NULL, 0, // no properties
+	nullptr, 0, // no properties
 	sInputCanvasMethods, sizeof(sInputCanvasMethods) / sizeof(sInputCanvasMethods[0]),
 	sInputCanvasEvents, sizeof(sInputCanvasEvents) / sizeof(sInputCanvasEvents[0]),
 	&sInputCanvasBehavior,
 	0, // forSystemUse
-	NULL, 0, // event instances
-	NULL, // interfaces
-	NULL, 0, // attributes
+	nullptr, 0, // event instances
+	nullptr, // interfaces
+	nullptr, 0, // attributes
 	sInputCanvasConstants, sizeof(sInputCanvasConstants) / sizeof(sInputCanvasConstants[0])
 };
 
@@ -382,7 +388,7 @@ REALstring FireFontNameAtLocation( REALcontrolInstance control, int location )
 		return fp( control, location );
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 // FireFontSizeAtLocation
@@ -419,7 +425,7 @@ REALobject FireIncompleteTextRange( REALcontrolInstance control )
 		return fp( control );
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 // FireInsertSetIncompleteText
@@ -516,7 +522,28 @@ static REALobject CreateRectObject( Rect rect )
 // Returns: nothing
 void FirePaint( REALcontrolInstance control, REALgraphics context, const Rect *rects, int rectCount )
 {
-	
+	if (!REALinRuntime()) {
+		Rect bounds;
+		REALGetControlBounds(control, &bounds);
+
+		REALSetPropValueColor(context, "ForeColor", 0x00FFFFFF);
+		auto fillRect =
+		    reinterpret_cast<void (*)(REALobject, RBInteger, RBInteger, RBInteger, RBInteger)>(
+		        REALLoadObjectMethod(
+		            context,
+		            "FillRect(x as Integer, y as Integer, Width as Integer, Height as Integer)"));
+		fillRect(context, 0, 0, bounds.right - bounds.left, bounds.bottom - bounds.top);
+
+		REALSetPropValueColor(context, "ForeColor", 0x00000000);
+		auto drawRect =
+		    reinterpret_cast<void (*)(REALobject, RBInteger, RBInteger, RBInteger, RBInteger)>(
+		        REALLoadObjectMethod(
+		            context,
+		            "DrawRect(x as Integer, y as Integer, Width as Integer, Height as Integer)"));
+		drawRect(context, 0, 0, bounds.right - bounds.left, bounds.bottom - bounds.top);
+		return;
+	}
+
 	void  (* fp)(REALcontrolInstance, REALgraphics, REALarray);
 	fp = (void  (*)(REALcontrolInstance, REALgraphics, REALarray))REALGetEventInstance( control, &sInputCanvasEvents[11] );
 	if (fp) {
@@ -551,7 +578,7 @@ REALobject FireRectForRange( REALcontrolInstance control, REALobject *range )
 		return fp( control, range );
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 // FireSelectedRange
@@ -569,7 +596,7 @@ REALobject FireSelectedRange( REALcontrolInstance control )
 		return fp( control );
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 // FireTextForRange
@@ -588,7 +615,7 @@ REALstring FireTextForRange( REALcontrolInstance control, REALobject range )
 		return fp( control, range );
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 // FireTextLength
@@ -621,7 +648,9 @@ static void Initializer( REALcontrolInstance control )
 {
 	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
 #if COCOA
-	data->view = [[XOJTextInputView alloc] initWithControlInstance:control];
+	if (REALinRuntime()) {
+		data->view = [[XOJTextInputView alloc] initWithControlInstance:control];
+	}
 #elif WINDOWS
 	data->view = new TextInputWindows( control );
 #elif WIDGET_GTK
@@ -787,8 +816,7 @@ static bool InterpretKeyEvent( REALcontrolInstance control, int keycode, int mod
 			if (modifiers & shiftKey) {
 				return FireDoCommand( control, "moveUpAndModifySelection:" );
 			} else if (modifiers & controlKey) {
-				// This really should be move to previous paragraph
-				return FireDoCommand( control, "moveToBeginningOfParagraph:" );
+				return FireDoCommand( control, "scrollLineUp:" );
 			} else {
 				return FireDoCommand( control, "moveUp:" );
 			}
@@ -798,8 +826,7 @@ static bool InterpretKeyEvent( REALcontrolInstance control, int keycode, int mod
 			if (modifiers & shiftKey) {
 				return FireDoCommand( control, "moveDownAndModifySelection:" );
 			} else if (modifiers & controlKey) {
-				// This really should be move to next paragraph
-				return FireDoCommand( control, "moveToEndOfParagraph:" );
+				return FireDoCommand( control, "scrollLineDown:" );
 			} else {
 				return FireDoCommand( control, "moveDown:" );
 			}
@@ -814,20 +841,9 @@ static bool InterpretKeyEvent( REALcontrolInstance control, int keycode, int mod
 		} break;
 	}
 
-	#if WIDGET_GTK
-		if (IsTextKey( keycode, modifiers )) {
-			REALstring key = UnicodeCharToString( keycode );
-			FireInsertText( control, key, NULL );
-			REALUnlockString( key );
-			return true;
-		}
-	#elif WINDOWS
-		// Keys are translated in a separate event, returning true here just prevents
-		// our framework from dispatching this further (i.e. to ContainerControls, and Window)
-		return true;
-	#endif
-
-	return false;
+	// Keys are translated in a separate event, returning true here just prevents
+	// our framework from dispatching this further (i.e. to ContainerControls, and Window)
+	return true;
 }
 #endif  // !TARGET_MACOS
 
@@ -860,19 +876,23 @@ static bool IsTextKey( int keycode, int modifiers )
 }
 #endif  // WIDGET_GTK
 
-static Boolean KeyDownEvent( REALcontrolInstance control, int charCode, int keyCode, int modifiers )
+static RBBoolean KeyDownEvent( REALcontrolInstance control, int charCode, int keyCode, int modifiers )
 {
-#if WIDGET_GTK
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
-	if (data->view->FilterKeyPress()) return true;
-#endif
-
-#if !TARGET_MACOS
-	return InterpretKeyEvent( control, charCode, modifiers );
-#endif
-    
-    return false;
+	#if !TARGET_MACOS
+		return InterpretKeyEvent( control, charCode, modifiers );
+	#else
+		return false;
+	#endif
 }
+
+#if WIDGET_GTK
+static RBBoolean UnfilteredKeyDownEvent( REALcontrolInstance control, int keyCode, int modifiers )
+{
+	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	data->view->KeyDown();
+	return false;
+}
+#endif
 
 // InvalidateTextRects
 // 
@@ -897,7 +917,7 @@ static void LinuxSelectInputMethod( REALcontrolInstance control )
 #endif
 }
 
-static Boolean MouseDown( REALcontrolInstance inst, int x, int y, int modifiers )
+static RBBoolean MouseDown( REALcontrolInstance inst, int x, int y, int modifiers )
 {
 	RBBoolean (*fp)(REALcontrolInstance, RBInteger, RBInteger) = (RBBoolean (*)(REALcontrolInstance, RBInteger, RBInteger))REALGetEventInstance( inst, &sInputCanvasEvents[16] );
 	if (fp) {
@@ -966,11 +986,11 @@ static void EnableMenuItems( REALcontrolInstance control )
 	}
 }
 
-static unsigned long HandleGetter( REALcontrolInstance control )
+static void *HandleGetter( REALcontrolInstance control )
 {
 	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
 #if COCOA
-	return (unsigned long)data->view;
+	return data->view;
 #else
 	return 0;
 #endif

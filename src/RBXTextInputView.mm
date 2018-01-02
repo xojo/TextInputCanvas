@@ -49,7 +49,7 @@ static REALstring CreateRBString( NSString *str )
 // Returns: the appropriate TextRange object
 static REALobject CreateRange( NSRange range )
 {
-	if (range.location == NSNotFound) return NULL;
+	if (range.location == NSNotFound) return nullptr;
 	return CreateTextRange( range.location, range.length );
 }
 
@@ -68,7 +68,7 @@ static REALobject CreateRange( NSRange range )
 }
 
 - (void)cleanup {
-	control = NULL;
+	control = nullptr;
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
@@ -295,11 +295,11 @@ static REALobject CreateRange( NSRange range )
 	
 	NSRect result = NSZeroRect;
 	if (rbRect) {
-		long /* FIXME: RBInteger */ top, left, width, height;
-		REALGetPropValue( rbRect, "Top", &top );
-		REALGetPropValue( rbRect, "Left", &left );
-		REALGetPropValue( rbRect, "Width", &width );
-		REALGetPropValue( rbRect, "Height", &height );
+		RBInteger top, left, width, height;
+		REALGetPropValueInteger( rbRect, "Top", &top );
+		REALGetPropValueInteger( rbRect, "Left", &left );
+		REALGetPropValueInteger( rbRect, "Width", &width );
+		REALGetPropValueInteger( rbRect, "Height", &height );
 		
 		// Now we have our RB control coordinates. Let's transform them into
 		// NSView coordinates and then into screen coordinates.
@@ -414,7 +414,7 @@ static REALobject CreateRange( NSRange range )
 - (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard {
 	if (NSString *str = [pboard stringForType:NSStringPboardType]) {
 		REALstring rbStr = CreateRBString( str );
-		FireInsertText( control, rbStr, NULL );
+		FireInsertText( control, rbStr, nullptr );
 		REALUnlockString( rbStr );
 		return YES;
 	}
@@ -486,7 +486,10 @@ static REALobject CreateRange( NSRange range )
 }
 
 - (void)resetCursorRects {
-    (void)sPluginCallbacks->resetCursorRects( control );
+	// Apparently we can get sent resetCursorRects after we've cleaned up, so
+	// don't crash.
+	if (control)
+		(void)sPluginCallbacks->resetCursorRects( control );
 }
 
 - (NSMenu *)menuForEvent:(NSEvent *)event {
