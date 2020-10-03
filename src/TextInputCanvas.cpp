@@ -73,25 +73,25 @@ static REALmethodDefinition sInputCanvasMethods[] = {
 };
 
 static REALevent sInputCanvasEvents[] = {
-	{ "BaselineAtIndex( index as integer ) as integer" },
-	{ "CharacterAtPoint( x as integer, y as integer ) as integer" },
+	{ "BaselineAtIndex(index As Integer) As Integer" },
+	{ "CharacterAtPoint(x As Integer, y As Integer) As Integer" },
 	{ "DiscardIncompleteText()" },
-	{ "DoCommand( command as string ) as boolean" },
-	{ "FontNameAtLocation( location as integer ) as string" },
-	{ "FontSizeAtLocation( location as integer ) as integer" },
-	{ "IncompleteTextRange() as TextRange" },
-	{ "SetIncompleteText( text as string, replacementRange as TextRange, relativeSelection as TextRange )" },
-	{ "InsertText( text as string, range as TextRange )" },
-	{ "IsEditable() as boolean" },
-	{ "KeyFallsThrough( key as string ) as boolean" },
-	{ "Paint( g as Graphics, areas() as object )" },
-	{ "RectForRange( byref range as TextRange ) as REALbasic.Rect" },
-	{ "SelectedRange() as TextRange" },
-	{ "TextForRange( range as TextRange ) as string " },
-	{ "TextLength() as integer" },
-	{ "MouseDown(x as Integer, y as Integer) as Boolean" },
-	{ "MouseDrag(x as Integer, y as Integer)" },
-	{ "MouseUp(x as Integer, y as Integer)" },
+	{ "DoCommand(command As String ) As Boolean" },
+	{ "FontNameAtLocation(location As Integer) As String" },
+	{ "FontSizeAtLocation(location As Integer) As Integer" },
+	{ "IncompleteTextRange() As TextRange" },
+	{ "SetIncompleteText(text As String, replacementRange As TextRange, relativeSelection As TextRange)" },
+	{ "InsertText(text As String, range As TextRange)" },
+	{ "IsEditable() As Boolean" },
+	{ "KeyFallsThrough(key As String) As Boolean" },
+	{ "Paint(g As Graphics, areas() As Xojo.Rect)" },
+	{ "RectForRange(ByRef range As TextRange) As Xojo.Rect" },
+	{ "SelectedRange() As TextRange" },
+	{ "TextForRange(range As TextRange) As String" },
+	{ "TextLength() As Integer" },
+	{ "MouseDown(x As Integer, y As Integer) As Boolean" },
+	{ "MouseDrag(x As Integer, y As Integer)" },
+	{ "MouseUp(x As Integer, y As Integer)" },
 	{ "GotFocus()" },
 	{ "LostFocus()" },
 	{ "EnableMenuItems()" }
@@ -287,7 +287,7 @@ static REALcontrol sInputCanvasControl = {
 void RegisterTextInputCanvasControl()
 {
 	REALRegisterControl( &sInputCanvasControl );
-	sRectClass = REALGetClassRef( "REALbasic.Rect" );
+	sRectClass = REALGetClassRef( "Xojo.Rect" );
 }
 
 // MARK: - TextInputCanvas event forwarding
@@ -501,14 +501,14 @@ bool FireKeyFallsThrough( REALcontrolInstance control, REALstring key )
 }
 
 /**
- * Converts a Rect into a REALbasic.Rect object.
+ * Converts a Rect into a Xojo.Rect object.
  */
 static REALobject CreateRectObject( Rect rect )
 {
-	typedef void (* ConstructorTy)( REALobject, RBInteger, RBInteger, RBInteger, RBInteger );
+	typedef void (* ConstructorTy)( REALobject, double, double, double, double );
 	
 	REALobject rectObject = REALnewInstance( sRectClass );
-	ConstructorTy constructor = (ConstructorTy)REALLoadObjectMethod( rectObject, "Constructor( x as integer, y as integer, w as integer, h as integer)" );
+	ConstructorTy constructor = (ConstructorTy)REALLoadObjectMethod( rectObject, "Constructor(x As Double, y As Double, width As Double, height As Double)" );
 	constructor( rectObject, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
 	return rectObject;
 }
@@ -526,21 +526,21 @@ void FirePaint( REALcontrolInstance control, REALgraphics context, const Rect *r
 		Rect bounds;
 		REALGetControlBounds(control, &bounds);
 
-		REALSetPropValueColor(context, "ForeColor", 0x00FFFFFF);
-		auto fillRect =
-		    reinterpret_cast<void (*)(REALobject, RBInteger, RBInteger, RBInteger, RBInteger)>(
+		REALSetPropValueColor(context, "DrawingColor", 0x00FFFFFF);
+		auto fillRectangle =
+		    reinterpret_cast<void (*)(REALobject, double, double, double, double)>(
 		        REALLoadObjectMethod(
 		            context,
-		            "FillRect(x as Integer, y as Integer, Width as Integer, Height as Integer)"));
-		fillRect(context, 0, 0, bounds.right - bounds.left, bounds.bottom - bounds.top);
+		            "FillRectangle(x As Double, y As Double, width As Double, height As Double)"));
+		fillRectangle(context, 0, 0, bounds.right - bounds.left, bounds.bottom - bounds.top);
 
-		REALSetPropValueColor(context, "ForeColor", 0x00000000);
-		auto drawRect =
-		    reinterpret_cast<void (*)(REALobject, RBInteger, RBInteger, RBInteger, RBInteger)>(
+		REALSetPropValueColor(context, "DrawingColor", 0x00000000);
+		auto drawRectangle =
+		    reinterpret_cast<void (*)(REALobject, double, double, double, double)>(
 		        REALLoadObjectMethod(
 		            context,
-		            "DrawRect(x as Integer, y as Integer, Width as Integer, Height as Integer)"));
-		drawRect(context, 0, 0, bounds.right - bounds.left, bounds.bottom - bounds.top);
+		            "DrawRectangle(x As Double, y As Double, width As Double, height As Double)"));
+		drawRectangle(context, 0, 0, bounds.right - bounds.left, bounds.bottom - bounds.top);
 		return;
 	}
 
