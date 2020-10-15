@@ -76,14 +76,14 @@ void TextInputGTK::PreEditStartCallback( GtkIMContext *context, gpointer userDat
 	if (selRange) {
 		REALobject rect = FireRectForRange( control, &selRange );
 		if (rect) {
-			double left = 0;
-			double top = 0;
-			double width = 0;
-			double height = 0;
-			REALGetPropValueDouble( rect, "Left", &left );
-			REALGetPropValueDouble( rect, "Top", &top );
-			REALGetPropValueDouble( rect, "Width", &width );
-			REALGetPropValueDouble( rect, "Height", &height );
+			RBInteger left = 0;
+			RBInteger top = 0;
+			RBInteger width = 0;
+			RBInteger height = 0;
+			REALGetPropValueInteger( rect, "Left", &left );
+			REALGetPropValueInteger( rect, "Top", &top );
+			REALGetPropValueInteger( rect, "Width", &width );
+			REALGetPropValueInteger( rect, "Height", &height );
 			REALUnlockObject( rect );
 
 			GdkRectangle area = {0};
