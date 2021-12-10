@@ -1,7 +1,7 @@
 //
 //  TextRange.h
 //
-//  (c) 2013 Xojo, Inc. -- All Rights Reserved
+//  (c) 2021 Xojo, Inc. -- All Rights Reserved
 //
 
 #ifndef IDEUtils_TextInputRange_h

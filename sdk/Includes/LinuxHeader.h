@@ -1,36 +1,18 @@
 // LinuxHeader.h
 //
-//	This file is part of the REALbasic plugin API.  You will usually want
-//	to use this as the prefix for your Linux plugin targets.
-//	Use the gcc -include option to add this prefix when compiling.
-//	Use -DWIDGET_GTK=1 when compiling plugins that use GTK.
+// This file used to be a required prefix header but is now only included for
+// backwards compatibility. There is no longer a need to use prefix headers.
 //
-// (c) 2003-2005 REAL Software Inc. -- All Rights Reserved
+// (c) 1997-2015 REAL Software Inc. -- All Rights Reserved
 // See file "Plug-in License SDK.txt" for details.
 
-#ifndef LINXUHEADER_H
+#ifndef LINUXHEADER_H
 #define LINUXHEADER_H
 
 #define UNIX_ANSI 1
 #define X_WINDOW 1
 
-#ifndef NULL
-	#define NULL 0
-#endif
-
-#ifndef assert
-	#define assert(cond) if (!(cond));
-	#define debugAssert(cond) assert(cond)
-	#define assertMsg(cond, msg) assert(cond)
-#endif
-
 #include "macTypesForAnsi.h"
-
-namespace QT {
-	typedef void *MovieController;
-	typedef void *Movie;
-};
-
+#include <stdbool.h>
 
 #endif	// LINUXHEADER_H
-

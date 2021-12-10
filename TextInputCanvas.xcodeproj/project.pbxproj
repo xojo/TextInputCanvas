@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3DA022902763BB5C0087909B /* PluginMainCocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DA0228E2763BB5C0087909B /* PluginMainCocoa.mm */; };
+		3DA022912763BB5C0087909B /* PluginMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3DA0228F2763BB5C0087909B /* PluginMain.cpp */; };
 		D800BA0C171704E900D8B933 /* rb_plugin_cocoa.h in Headers */ = {isa = PBXBuildFile; fileRef = D800BA0B171704E900D8B933 /* rb_plugin_cocoa.h */; };
-		D800BA0E171704F300D8B933 /* PluginMainCocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = D800BA0D171704F300D8B933 /* PluginMainCocoa.mm */; };
-		D811CEEC1533A21D00A04328 /* PluginMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D811CEE71533A21D00A04328 /* PluginMain.cpp */; };
 		D811CEED1533A21D00A04328 /* rb_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = D811CEE81533A21D00A04328 /* rb_plugin.h */; };
 		D811CEEE1533A21D00A04328 /* RBCarbonHeaders.h in Headers */ = {isa = PBXBuildFile; fileRef = D811CEE91533A21D00A04328 /* RBCarbonHeaders.h */; };
 		D811CEEF1533A21D00A04328 /* RBCocoaHeaders.h in Headers */ = {isa = PBXBuildFile; fileRef = D811CEEA1533A21D00A04328 /* RBCocoaHeaders.h */; };
@@ -25,10 +25,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3DA0228E2763BB5C0087909B /* PluginMainCocoa.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PluginMainCocoa.mm; sourceTree = "<group>"; };
+		3DA0228F2763BB5C0087909B /* PluginMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PluginMain.cpp; sourceTree = "<group>"; };
 		D800BA0B171704E900D8B933 /* rb_plugin_cocoa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rb_plugin_cocoa.h; sourceTree = "<group>"; };
-		D800BA0D171704F300D8B933 /* PluginMainCocoa.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PluginMainCocoa.mm; sourceTree = "<group>"; };
 		D811CEDA1533A20100A04328 /* IDEUtils.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = IDEUtils.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		D811CEE71533A21D00A04328 /* PluginMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PluginMain.cpp; sourceTree = "<group>"; };
 		D811CEE81533A21D00A04328 /* rb_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rb_plugin.h; sourceTree = "<group>"; };
 		D811CEE91533A21D00A04328 /* RBCarbonHeaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RBCarbonHeaders.h; sourceTree = "<group>"; };
 		D811CEEA1533A21D00A04328 /* RBCocoaHeaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RBCocoaHeaders.h; sourceTree = "<group>"; };
@@ -88,8 +88,8 @@
 		D811CEE51533A21D00A04328 /* Glue Code */ = {
 			isa = PBXGroup;
 			children = (
-				D811CEE71533A21D00A04328 /* PluginMain.cpp */,
-				D800BA0D171704F300D8B933 /* PluginMainCocoa.mm */,
+				3DA0228F2763BB5C0087909B /* PluginMain.cpp */,
+				3DA0228E2763BB5C0087909B /* PluginMainCocoa.mm */,
 			);
 			path = "Glue Code";
 			sourceTree = "<group>";
@@ -189,6 +189,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = D811CECF1533A20100A04328;
@@ -206,11 +207,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D811CEEC1533A21D00A04328 /* PluginMain.cpp in Sources */,
-				D800BA0E171704F300D8B933 /* PluginMainCocoa.mm in Sources */,
 				D87A5B021757F50900F7D7B7 /* main.cpp in Sources */,
 				D87A5B041757F50900F7D7B7 /* RBXTextInputView.mm in Sources */,
 				D87A5B051757F50900F7D7B7 /* TextInputCanvas.cpp in Sources */,
+				3DA022912763BB5C0087909B /* PluginMain.cpp in Sources */,
+				3DA022902763BB5C0087909B /* PluginMainCocoa.mm in Sources */,
 				D87A5B071757F50900F7D7B7 /* TextRange.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -238,7 +239,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -258,7 +259,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -266,9 +267,10 @@
 		D811CEDF1533A20100A04328 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				EXPORTED_SYMBOLS_FILE = "$(PROJECT_DIR)/src/Exports.exp";
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/sdk/Includes/RBCocoaHeaders.h";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -276,9 +278,10 @@
 		D811CEE01533A20100A04328 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				EXPORTED_SYMBOLS_FILE = "$(PROJECT_DIR)/src/Exports.exp";
 				GCC_PREFIX_HEADER = "$(PROJECT_DIR)/sdk/Includes/RBCocoaHeaders.h";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

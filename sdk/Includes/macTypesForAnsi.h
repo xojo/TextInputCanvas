@@ -1,3 +1,11 @@
+// macTypesForAnsi.h
+//
+// This file used to be a required on Linux and is now provided only for
+// backwards compatibility.
+//
+// (c) 1997-2015 REAL Software Inc. -- All Rights Reserved
+// See file "Plug-in License SDK.txt" for details.
+
 #ifndef MACTYPESFORANSI_H
 #define MACTYPESFORANSI_H
 
@@ -13,20 +21,22 @@ struct Rect
 {
 	short top, left, bottom, right;
 };
+typedef struct Rect Rect;
 
 struct Point
 {
 	int v, h;
 };
+typedef struct Point Point;
 
 struct RGBColor
 {
 	unsigned short red, green, blue;
 };
+typedef struct RGBColor RGBColor;
 
 typedef char **Handle;
-typedef void* Movie;
-typedef long OSType;
+typedef unsigned int OSType;
 typedef short OSErr;
 typedef char *Ptr;
 typedef Ptr GWorldPtr;
@@ -34,7 +44,7 @@ typedef unsigned long ResType;
 typedef long RgnHandle;
 typedef long Size;
 typedef unsigned char Style;
-typedef unsigned long UInt32;
+typedef unsigned int UInt32;
 
 #ifndef nil
 	#define nil 0
@@ -52,12 +62,13 @@ typedef unsigned long UInt32;
 	#define	FALSE	0
 #endif
 
-#ifndef noErr
-	const short noErr = 0;
-#endif
-const short ioErr = -36;
-const short badFileFormat = -208;
-
+enum {
+	#ifndef noErr
+		noErr = 0,
+	#endif
+	ioErr = -36,
+	badFileFormat = -208,
+};
 
 enum {
 	bold  = 1,

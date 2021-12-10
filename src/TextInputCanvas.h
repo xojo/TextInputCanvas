@@ -1,7 +1,7 @@
 //
 //  TextInputCanvas.h
 //
-//  (c) 2013 Xojo, Inc. -- All Rights Reserved
+//  (c) 2021 Xojo, Inc. -- All Rights Reserved
 //
 
 #ifndef IDEUtils_TextInputCanvas_h
@@ -10,7 +10,7 @@
 #include "rb_plugin.h"
 
 int FireBaselineAtIndex( REALcontrolInstance control, int index );
-int FireCharacterAtPoint( REALcontrolInstance control, int x, int y );
+int FireCharacterAtPoint( REALcontrolInstance control, double x, double y );
 void FireDiscardIncompleteText( REALcontrolInstance control );
 bool FireDoCommand( REALcontrolInstance control, const char *command );
 REALstring FireFontNameAtLocation( REALcontrolInstance control, int location );
