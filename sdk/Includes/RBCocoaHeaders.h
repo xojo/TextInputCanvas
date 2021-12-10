@@ -1,18 +1,11 @@
+// RBCocoaHeaders.h
+//
+// This file used to be a required prefix header but is now only included for
+// backwards compatibility. There is no longer a need to use prefix headers.
+//
+// (c) 1997-2015 REAL Software Inc. -- All Rights Reserved
+// See file "Plug-in License SDK.txt" for details.
+
 #define COCOA 1
-#define ALLOW_CARBON_IN_COCOA 1
-
-#define TARGET_CARBON ALLOW_CARBON_IN_COCOA
-
-#ifdef __OBJC__
-    #import <Cocoa/Cocoa.h>
-#else
-	struct NSWindow;
-	struct NSView;
-#endif
-
-#if ALLOW_CARBON_IN_COCOA
-	#import <Carbon/Carbon.h>
-#endif
-
-#import <CoreServices/CoreServices.h>
-#import <QuickTime/QuickTime.h>
+#define TARGET_CARBON 1
+#include <Carbon/Carbon.h>

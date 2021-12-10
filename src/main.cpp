@@ -1,7 +1,7 @@
 //
 //  main.cpp
 //
-//  (c) 2013 Xojo, Inc. -- All Rights Reserved
+//  (c) 2021 Xojo, Inc. -- All Rights Reserved
 //
 
 #include "TextInputCanvas.h"
@@ -9,6 +9,5 @@
 
 void PluginEntry()
 {
-	RegisterTextRangeClass();
 	RegisterTextInputCanvasControl();
 }

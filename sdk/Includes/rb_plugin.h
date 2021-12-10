@@ -1,154 +1,164 @@
-// rb_plugin.h
-//
-// This file is part of the REALbasic plugin API.  Include this file
-// at the top of your plugin source files.
-//
-// (c) 2013 Xojo, Inc. -- All Rights Reserved
-// See file "Plug-in License SDK.txt" for details.
+/** @file rb_plugin.h
+ *  @brief This file contains functions to register data structures and functions to communicate with the Xojo framework.
+ *	Include this file at the top of your plugin source files
+ *	@copyright Xojo, Inc. -- All Rights Reserved.
+ */
 
 #ifndef RB_PLUGIN_H
 #define RB_PLUGIN_H
 
-#if !WINDOWS || !defined( __cplusplus )
-	#define QT_NAMESPACE
-#else
-	#define QT_NAMESPACE QT::
-#endif
-
 #include "REALplugin.h"
+#if defined( __cplusplus )
+	#include "rb_plugin_cpp.h"
+#endif
 
 // This will be used in stage 2 of phasing out the 
 // deprecated functionality.  It's not used now because
 // it would require users to have to modify existing 
 // projects so they compile.
-//#include "RBDeprecatedPluginSDK.h"
+#include "rb_plugin_deprecated.h"
+#include <stdbool.h>
 
-// picture types and description
-enum {
-	pictureUnknown,
-	pictureMacintoshPICT,
-	pictureMacintoshCICN,
-	pictureMacintoshIconSuite,
-	pictureMacintoshGWorld,
-	pictureWin32DIB,		// a HDIB, use GlobalLock on it
-	pictureGdkPixmap,
-	pictureWin32Bitmap,		// a HBITMAP, but really a DIBSECTION, use GetObject on it
-	pictureCGBitmapContext,
-	pictureGDPtr,			// Console Only: Pointer to a copy of GD data, which is 11 bytes meta data then pixels follow in ARGB format
-	pictureGDImagePtr,		// Console Only: Pointer to gdImageStruct
-	pictureGDIPlusBitmap,	// a GpBitmap handle
-	pictureCairoContext		// a cairo_t ptr
-};
-
-// Common text encoding values
-const unsigned long kREALTextEncodingUnknown = 0xFFFF;
-const unsigned long kREALTextEncodingASCII = 0x0600;
-const unsigned long kREALTextEncodingUTF8 = 0x08000100;
-const unsigned long kREALTextEncodingUTF16 = 0x0100;
-const unsigned long kREALTextEncodingUTF32 = 0x0c000100;
-
-struct REALpictureDescription
-{
-	long pictureType;
-	void *pictureData;
-	long width, height, depth;			// Plugin authors can now get depth and transparency info (5.0)
-	Boolean transparent;
-};
-typedef struct REALpictureDescription REALpictureDescription;
-
-// Sound types and description
-enum {
-	soundUnknown,
-	soundMacintoshSnd
-};
-
-struct REALsoundDescription
-{
-	long soundType;
-	void *soundData;
-};
-typedef struct REALsoundDescription REALsoundDescription;
-
-// handy macros
-#define ControlData(defn, instance, typeName, data) typeName *data = (typeName *) REALGetControlData(instance, &defn)
-#define ClassData(defn, instance, typeName, data) typeName *data = (typeName *) REALGetClassData(instance, &defn)
-#ifndef _countof
-	#define _countof( x )	((x)?(sizeof( x ) / sizeof( x[ 0 ] )):0)
-#endif
-
-// pixel types
-enum RBPixelType
-{
-	kRBPixelRGB24 = 1,			// 3 bytes/pixel: Red, Green, Blue
-	kRBPixelBGR24,				// 3 bytes/pixel: Blue, Green, Red
-	kRBPixelXRGB32,				// 4 bytes/pixel: Unused, Red, Green, Blue
-	kRBPixelBGRX32				// 4 bytes/pixel: Blue, Green, Red, Unused
-};
-typedef enum RBPixelType RBPixelType;
-
-struct REALwindowStruct;
-typedef struct REALwindowStruct *REALwindow;
-
-#if FLAT_C_PLUGIN_HEADERS && defined( __cplusplus )
-	extern "C" {
+#if defined( __cplusplus )
+extern "C" {
 #endif
 
 /**
- * A view of the string's contents, with a known format.
- * 
- * Care should be taken when using this structure, since it is not reference 
- * counted. Performing a copy of it and calling REALDisposeStringData on both
- * will result in undefined behavior, crashes, and possibly summon dragons.
- *
- * @see REALGetStringData
- */
-struct REALstringData {
-	/** The bytes of the string in the required encoding. */
-	const void *data;
-	
-	/** The length of the data, in bytes. */
-	size_t length;
-	
-	/** The encoding of the data.
-	 *
-	 * This will always match what was passed to REALGetStringData and is
-	 * included here for convenience.
-	 */
-	unsigned long encoding;
-
-	const void *private1;
-	unsigned long private2;
-};
-typedef struct REALstringData REALstringData;
+* @brief Accesses the data of a string.
+*
+* This retrieves the contents of the string in a known encoding. If it is not
+* possible to convert the string, it will return false.
+*
+* This function is more efficient than REALGetStringContents in the typical use
+* case where a plugin needs the string's data in a known encoding.
+*
+* You are required to dispose of this string using REALDisposeStringContents when
+* you are done with it.
+*
+* @note The behavior of this function changed in 2014r2.  Previously it would
+*       return false given a NULL string.
+* @param str The REALbasic string.
+* @param encoding A REALbasic encoding identifier.
+* @param outData The REALstringData structure to fill. Must not be NULL.
+* @result Whether or not the data could be read.
+* @version 2012r1
+*/
+bool REALGetStringData(REALstring str, uint32_t encoding, REALstringData *outData) RB_WARN_UNUSED_RESULT RB_NON_NULL(3);
 
 /**
- * Accesses the data of a string.
- *
- * This retrieves the contents of the string in a known encoding. If it is not
- * possible to convert the string (or the string is NULL), it will return false.
- *
- * This function obsoletes REALGetCString and REALGetStringContents. It is highly
- * recommended that you switch to this function as the older APIs will be removed
- * in a future version.
- *
- * You are required to dispose of this string using REALDisposeStringContents when
- * you are done with it.
- *
- * @param str The REALbasic string.
- * @param encoding A REALbasic encoding identifier.
- * @param outData The REALstringData structure to fill. Must not be NULL.
- * @result Whether or not the data could be read.
- * @version 2012r1
- */
-Boolean REALGetStringData( REALstring str, unsigned long encoding, REALstringData *outData ) RB_WARN_UNUSED_RESULT RB_NON_NULL(3);
+* Diposes of the contents of a REALstringData.
+*
+* @param data The string data. Must not be NULL.
+* @version 2012r1
+*/
+void REALDisposeStringData(REALstringData *data) RB_NON_NULL(1);
 
-/**
- * Diposes of the contents of a REALstringData.
- *
- * @param data The string data. Must not be NULL.
- * @version 2012r1
- */
-void REALDisposeStringData( REALstringData *data ) RB_NON_NULL(1);
+bool REALGetPropValueCurrency(REALobject object, const char *propName, REALcurrency *outValue);
+bool REALGetPropValueString(REALobject object, const char *propName, REALstring *outValue);
+bool REALGetPropValueObject(REALobject object, const char *propName, REALobject *outValue);
+bool REALGetPropValueColor(REALobject object, const char *name, RBColor *outValue);
+bool REALGetPropValueInteger(REALobject object, const char *propName, RBInteger *outValue);
+bool REALGetPropValueUInteger(REALobject object, const char *propName, RBUInteger *outValue);
+bool REALGetPropValueInt8(REALobject object, const char *name, char *value);
+bool REALGetPropValueUInt8(REALobject object, const char *name, unsigned char *value);
+bool REALGetPropValueInt16(REALobject object, const char *name, int16_t *value);
+bool REALGetPropValueUInt16(REALobject object, const char *name, uint16_t *value);
+bool REALGetPropValueInt32(REALobject object, const char *propName, int32_t *outValue);
+bool REALGetPropValueUInt32(REALobject object, const char *name, uint32_t *value);
+bool REALGetPropValueInt64(REALobject object, const char *name, RBInt64 *value);
+bool REALGetPropValueUInt64(REALobject object, const char *name, RBUInt64 *value);
+bool REALGetPropValueDouble(REALobject object, const char *propName, double *outValue);
+bool REALGetPropValueSingle(REALobject object, const char *name, float *value);
+bool REALGetPropValuePtr(REALobject object, const char *propName, void **outValue);
+bool REALGetPropValueCString(REALobject object, const char *propName, const char **outValue);
+bool REALGetPropValueWString(REALobject object, const char *propName, const wchar_t **outValue);
+bool REALGetPropValuePString(REALobject object, const char *propName, const unsigned char **outValue);
+bool REALGetPropValueBoolean(REALobject object, const char *propName, bool *outValue);
+#if TARGET_CARBON || TARGET_COCOA
+bool REALGetPropValueCFStringRef(REALobject object, const char *propName, CFStringRef *outValue);
+#endif
+
+bool REALSetPropValueCurrency(REALobject object, const char *propName, REALcurrency value);
+bool REALSetPropValueInt32(REALobject object, const char *propName, int32_t value);
+bool REALSetPropValueString(REALobject object, const char *propName, REALstring value);
+bool REALSetPropValueDouble(REALobject object, const char *propName, double value);
+bool REALSetPropValueObject(REALobject object, const char *propName, REALobject value);
+bool REALSetPropValueBoolean(REALobject object, const char *propName, bool value);
+bool REALSetPropValueColor(REALobject object, const char *name, RBColor value);
+bool REALSetPropValueInteger(REALobject object, const char *propName, RBInteger value);
+bool REALSetPropValueUInteger(REALobject object, const char *propName, RBUInteger value);
+bool REALSetPropValueUInt32(REALobject object, const char *propName, uint32_t value);
+bool REALSetPropValueUInt64(REALobject object, const char *propName, RBUInt64 value);
+bool REALSetPropValueInt64(REALobject object, const char *propName, RBInt64 value);
+bool REALSetPropValueInt16(REALobject object, const char *propName, int16_t value);
+bool REALSetPropValueUInt16(REALobject object, const char *propName, uint16_t value);
+bool REALSetPropValueInt8(REALobject object, const char *propName, char value);
+bool REALSetPropValueUInt8(REALobject object, const char *propName, unsigned char value);
+bool REALSetPropValueSingle(REALobject object, const char *propName, float value);
+bool REALSetPropValuePtr(REALobject object, const char *propName, void *value);
+bool REALSetPropValueCString(REALobject object, const char *propName, const char *value);
+bool REALSetPropValueWString(REALobject object, const char *propName, const wchar_t *value);
+bool REALSetPropValuePString(REALobject object, const char *propName, const unsigned char *value);
+#if TARGET_CARBON || TARGET_COCOA
+bool REALSetPropValueCFStringRef(REALobject object, const char *propName, CFStringRef value);
+#endif
+
+void REALInsertArrayValueInt64(REALarray arr, RBInteger index, RBInt64 value);
+void REALInsertArrayValueInt32(REALarray arr, RBInteger index, int32_t value);
+void REALInsertArrayValueInt16(REALarray arr, RBInteger index, int16_t value);
+void REALInsertArrayValueInt8(REALarray arr, RBInteger index, char value);
+void REALInsertArrayValueUInt64(REALarray arr, RBInteger index, RBUInt64 value);
+void REALInsertArrayValueUInt32(REALarray arr, RBInteger index, uint32_t value);
+void REALInsertArrayValueUInt16(REALarray arr, RBInteger index, uint16_t value);
+void REALInsertArrayValueUInt8(REALarray arr, RBInteger index, unsigned char value);
+void REALInsertArrayValueSingle(REALarray arr, RBInteger index, float value);
+void REALInsertArrayValueDouble(REALarray arr, RBInteger index, double value);
+void REALInsertArrayValueBoolean(REALarray arr, RBInteger index, bool value);
+void REALInsertArrayValueObject(REALarray arr, RBInteger index, REALobject value);
+void REALInsertArrayValueString(REALarray arr, RBInteger index, REALstring value);
+void REALInsertArrayValueText(REALarray arr, RBInteger index, REALtext value);
+void REALInsertArrayValueColor(REALarray arr, RBInteger index, RBColor value);
+void REALInsertArrayValueInteger(REALarray arr, RBInteger index, RBInteger value);
+void REALInsertArrayValueUInteger(REALarray arr, RBInteger index, RBUInteger value);
+void REALInsertArrayValueCurrency(REALarray arr, RBInteger index, REALcurrency value);
+
+void REALGetArrayValueInt64(REALarray arr, RBInteger index, RBInt64 *value);
+void REALGetArrayValueInt32(REALarray arr, RBInteger index, int32_t *value);
+void REALGetArrayValueInt16(REALarray arr, RBInteger index, int16_t *value);
+void REALGetArrayValueInt8(REALarray arr, RBInteger index, char *value);
+void REALGetArrayValueUInt64(REALarray arr, RBInteger index, RBUInt64 *value);
+void REALGetArrayValueUInt32(REALarray arr, RBInteger index, uint32_t *value);
+void REALGetArrayValueUInt16(REALarray arr, RBInteger index, uint16_t *value);
+void REALGetArrayValueUInt8(REALarray arr, RBInteger index, unsigned char *value);
+void REALGetArrayValueSingle(REALarray arr, RBInteger index, float *value);
+void REALGetArrayValueDouble(REALarray arr, RBInteger index, double *value);
+void REALGetArrayValueBoolean(REALarray arr, RBInteger index, bool *value);
+void REALGetArrayValueObject(REALarray arr, RBInteger index, REALobject *value);
+void REALGetArrayValueString(REALarray arr, RBInteger index, REALstring *value);
+void REALGetArrayValueText(REALarray arr, RBInteger index, REALtext *value);
+void REALGetArrayValueColor(REALarray arr, RBInteger index, RBColor *value);
+void REALGetArrayValueInteger(REALarray arr, RBInteger index, RBInteger *value);
+void REALGetArrayValueUInteger(REALarray arr, RBInteger index, RBUInteger *value);
+void REALGetArrayValueCurrency(REALarray arr, RBInteger index, REALcurrency *value);
+
+void REALSetArrayValueInt64(REALarray arr, RBInteger index, RBInt64 value);
+void REALSetArrayValueInt32(REALarray arr, RBInteger index, int32_t value);
+void REALSetArrayValueInt16(REALarray arr, RBInteger index, int16_t value);
+void REALSetArrayValueInt8(REALarray arr, RBInteger index, char value);
+void REALSetArrayValueUInt64(REALarray arr, RBInteger index, RBUInt64 value);
+void REALSetArrayValueUInt32(REALarray arr, RBInteger index, uint32_t value);
+void REALSetArrayValueUInt16(REALarray arr, RBInteger index, uint16_t value);
+void REALSetArrayValueUInt8(REALarray arr, RBInteger index, unsigned char value);
+void REALSetArrayValueSingle(REALarray arr, RBInteger index, float value);
+void REALSetArrayValueDouble(REALarray arr, RBInteger index, double value);
+void REALSetArrayValueBoolean(REALarray arr, RBInteger index, bool value);
+void REALSetArrayValueObject(REALarray arr, RBInteger index, REALobject value);
+void REALSetArrayValueString(REALarray arr, RBInteger index, REALstring value);
+void REALSetArrayValueText(REALarray arr, RBInteger index, REALtext value);
+void REALSetArrayValueColor(REALarray arr, RBInteger index, RBColor value);
+void REALSetArrayValueInteger(REALarray arr, RBInteger index, RBInteger value);
+void REALSetArrayValueUInteger(REALarray arr, RBInteger index, RBUInteger value);
+void REALSetArrayValueCurrency(REALarray arr, RBInteger index, REALcurrency value);
 
 /**
  * Converts a string to a CFString.
@@ -182,7 +192,7 @@ void * REALGetPluginData( REALobject obj, REALclassRef classRef );
  * @result Whether or not the object is an instance of the class.
  * @version 2011r4
  */
-Boolean REALObjectIsA( REALobject obj, REALclassRef classRef );
+bool REALObjectIsA( REALobject obj, REALclassRef classRef );
 
 /**
  * Calls an arbitrary function, wrapped in a REALbasic exception handler.
@@ -230,13 +240,105 @@ REALstring REALAddStrings( REALstring str1, REALstring str2 );
  */
 void * REALGetDelegateInvoker( REALobject delegate );
 
-typedef void (*BackgroundTaskProc)(void *data);
-long REALRegisterBackgroundTask( BackgroundTaskProc proc, unsigned long period, void *data );
-void REALUnregisterBackgroundTask( long id );
+/**
+ * Increments reference count on the Text object
+ *
+ * @param value The Text object to lock
+ * @version 2015r1
+ */
+void REALLockText(REALtext value);
 
-Boolean REALinRuntime(void);
+/**
+ * Decrements reference count on the Text object
+ *
+ * @param value The Text object to unlock
+ * @version 2015r1
+ */
+void REALUnlockText(REALtext value);
+
+/**
+ * Builds a Text object from the supplied data
+ *
+ * @param data The string data
+ * @param size The size, in bytes, of the string data.
+ *             Not including the NULL terminator
+ * @param encodingName The IANA encoding name of the string data
+ * @return Text object, or nullptr on error/invalid data
+ * @version 2015r1
+ */
+REALtext REALBuildText(const void *data,
+	size_t size,
+	const char *encodingName) RB_WARN_UNUSED_RESULT;
+
+/**
+ * Compares two Text objects
+ *
+ * @param value1 Text to compare with
+ * @param value2 Text to compare against
+ * @param options Can be 0 case insensitve, or 1 case sensitive
+ * @return Positive value if value1 > value2, or 0 if value1 = value2,
+ *			or negative if value1 < value2
+ * @version 2015r1
+ */
+RBInteger REALCompareText(REALtext value1, REALtext value2, RBInteger options);
+
+/**
+ * Compares two Text objects
+ *
+ * @param value1 Text to concat to
+ * @param value2 Text to concat with
+ * @return Concatenated Text object
+ * @version 2015r1
+ */
+REALtext REALConcatenateText(REALtext value1, REALtext value2) RB_WARN_UNUSED_RESULT;
+
+typedef struct {
+	const void *data;
+	size_t size;
+	const char *encoding;
+} REALtextData;
+
+/**
+ * Converts the Text object to a more useful data form
+ *
+ * @param value Text object
+ * @param encodingName The desired encoding
+ * @param allowLossyConversion true to allow lossy conversion, false otherwise
+ * @return The convert Text stored in a REALtextData object, or nullptr on error
+ * @version 2015r1
+ */
+REALtextData * REALGetTextData(REALtext value,
+	const char *encodingName,
+	bool allowLossyConversion) RB_WARN_UNUSED_RESULT RB_NON_NULL(2);
+
+/**
+ * Frees memory allocated by REALGetTextData
+ *
+ * @param value REALtextData to dispose of
+ * @version 2015r1
+ */
+void REALDisposeTextData(REALtextData *value);
+
+/**
+ * Copies the Text value to a CFStringRef
+ *
+ * @param value Text to copy
+ * @return A copy of the Text data as a CFStringRef
+ * @version 2015r1
+ */
+#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
+CFStringRef REALCopyTextCFString(REALtext value);
+#endif
+
+typedef void (*BackgroundTaskProc)(void *data);
+int32_t REALRegisterBackgroundTask( BackgroundTaskProc proc, uint32_t period, void *data );
+void REALUnregisterBackgroundTask( int32_t id );
+
+bool REALinRuntime(void);
 
 void REALRegisterControl(REALcontrol *defn);
+
+void REALRegisterMobileControl(REALmobileControl *defn);
 
 void REALRegisterDBEngine(REALdbEngineDefinition *defn);
 
@@ -246,17 +348,7 @@ void REALRegisterDBCursor(REALdbCursorDefinition *defn);
 
 void REALRegisterClass(REALclassDefinition *defn);
 
-REALstring REALDefaultControlFont(void) RB_WARN_UNUSED_RESULT;
-
-unsigned long REALDefaultControlFontSize(void);
-
-REALstring REALBuildString(const char *contents, int length) RB_WARN_UNUSED_RESULT;
-
-#if FLAT_C_PLUGIN_HEADERS
-	REALstring REALBuildStringWithEncoding( const char *contents, int byteCount, unsigned long encoding ) RB_WARN_UNUSED_RESULT;
-#else
-	REALstring REALBuildString( const char *contents, int byteCount, unsigned long encoding ) RB_WARN_UNUSED_RESULT;
-#endif
+REALstring REALBuildStringWithEncoding( const char *contents, int byteCount, uint32_t encoding ) RB_WARN_UNUSED_RESULT;
 
 void REALLockObject(REALobject obj);
 
@@ -266,23 +358,22 @@ void REALLockString(REALstring str);
 
 void REALUnlockString(REALstring str);
 
-#if TARGET_CARBON && !TARGET_COCOA
-REALpicture REALBuildPictureFromPicHandle(PicHandle pic, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
-#endif
-
-#if TARGET_CARBON || TARGET_WIN32
-REALpicture REALBuildPictureFromGWorld(void *world, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
-#endif
-
-REALpicture REALBuildPictureFromPictureDescription(REALpictureDescription *description, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
+REALpicture REALBuildPictureFromPictureDescription(REALpictureDescription *description, bool bPassOwnership) RB_WARN_UNUSED_RESULT;
 
 void REALUnlockPictureDescription(REALpicture pic);
 
-void REALLockSoundDescription(REALsound sound, REALsoundDescription *description);
-
-void REALUnlockSoundDescription(REALsound sound);
-
 REALdbCursor REALdbCursorFromDBCursor(dbCursor *cursor, REALdbCursorDefinition *defn);
+
+/**
+ * This function creates a new RowSet from the given dbCursor definition.  Since it
+ * returns a REALdbCursor you can use it on other functions that accept it
+ *
+ * @param cursor Your dbCursor object which you'll need to maintain until closeCursor is called
+ * @param defn Your cursor definition structure
+ * @result A new object.
+ * @version 2019r2
+ */
+REALdbCursor REALNewRowSetFromDBCursor(dbCursor *cursor, REALdbCursorDefinition *defn);
 
 REALdbDatabase REALdbDatabaseFromDBDatabase(dbDatabase *database, REALdbEngineDefinition *defn);
 
@@ -290,30 +381,20 @@ void *REALGetEventInstance(REALcontrolInstance instance, REALevent *event);
 
 void *REALGetControlData(REALcontrolInstance instance, REALcontrol *defn);
 
+void *REALGetMobileControlData(REALcontrolInstance instance, REALmobileControl *defn);
+
 void *REALGetClassData(REALobject instance, REALclassDefinition *defn);
 
-#if TARGET_CARBON && !TARGET_COCOA
-void REALSelectGraphics(REALgraphics context);
-#endif
-
-#if TARGET_CARBON && !COCOA
-void REALGraphicsDrawOffscreenMacControl(REALgraphics context, ControlHandle mh);
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-REALsound REALBuildSoundFromHandle(Handle sound, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
+#if TARGET_CARBON || TARGET_COCOA
+REALappleEvent REALBuildAppleEvent(const AppleEvent *event, bool bPassOwnership) RB_WARN_UNUSED_RESULT;
 #endif
 
 #if TARGET_CARBON || TARGET_COCOA
-REALappleEvent REALBuildAppleEvent(const AppleEvent *event, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
+REALappleEvent REALBuildAEDescList(const AppleEvent *event, bool bPassOwnership) RB_WARN_UNUSED_RESULT;
 #endif
 
 #if TARGET_CARBON || TARGET_COCOA
-REALappleEvent REALBuildAEDescList(const AppleEvent *event, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
-#endif
-
-#if TARGET_CARBON || TARGET_COCOA
-REALappleEvent REALBuildAEObjSpecifier(const AppleEvent *event, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
+REALappleEvent REALBuildAEObjSpecifier(const AppleEvent *event, bool bPassOwnership) RB_WARN_UNUSED_RESULT;
 #endif
 
 #if TARGET_CARBON || TARGET_COCOA
@@ -324,49 +405,47 @@ AppleEvent *REALAccessAppleEvent(REALappleEvent event);
 AppleEvent *REALAccessAppleEventReply(REALappleEvent event);
 #endif
 
-#if (TARGET_CARBON && !TARGET_COCOA) && !TARGET_64BIT
-REALmovie REALbuildMovie(QT_NAMESPACE Movie movie, int resRefNum, int bNew) RB_WARN_UNUSED_RESULT;
-#endif
-
-#if (TARGET_CARBON || TARGET_COCOA) && !TARGET_64BIT
-void REALmarkMovieDirty(REALmovie movie);
-#endif
-
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-int REALenterMovies(void);
-#endif
-
 void REALRegisterDataSourceInterface(const char *szMenuName, REALDataSourceInterfaceProc proc);
 
 void REALRegisterDataSource(const char *szDatasourceName, REALDataSourceProc proc);
 
-void REALDesignAddDataSource(const char *baseName, const char *szDataSourceName, Ptr data, int dataLen);
+void REALDesignAddDataSource(const char *baseName, const char *szDataSourceName, void *data, int dataLen);
 
 void REALRegisterDatabaseConnection(REALDatabaseConnectionDefinition *defn);
 
 #if TARGET_WIN32
-REALpicture REALBuildPictureFromDIB(HANDLE hDIB, Boolean bPassOwnership) RB_WARN_UNUSED_RESULT;
+REALpicture REALBuildPictureFromDIB(HANDLE hDIB, bool bPassOwnership) RB_WARN_UNUSED_RESULT;
 #endif
 
 double REALGetRBVersion(void);
 
 void REALRaiseException(REALobject exception);
 
-int REALGetArrayUBound(void*array);
+RBInteger REALGetArrayUBound(void*array);
 
-void REALGetArrayStructure( REALarray array, int index, void *structure );
+void REALGetArrayStructure( REALarray array, RBInteger index, void *structure );
 
-Boolean REALGetVariantStructure( REALobject variant, void *buffer, unsigned long length );
+bool REALGetVariantStructure( REALobject variant, void *buffer, size_t length );
 
 void REALYieldToRB(void);
 
 REALclassRef REALGetClassRef(const char *className);
 
-#if FLAT_C_PLUGIN_HEADERS
-	REALobject REALnewInstanceWithClass( REALclassRef classRef ) RB_WARN_UNUSED_RESULT;
-#else
-REALobject REALnewInstance(REALclassRef classRef) RB_WARN_UNUSED_RESULT;
-#endif
+REALobject REALnewInstanceWithClass( REALclassRef classRef ) RB_WARN_UNUSED_RESULT;
+
+/**
+ * This function creates a new instance from the given class definition. Space
+ * for the object is allocated, and the object's initializer (the class
+ * definition's "constructor" member) is called before the object is returned.
+ *
+ * No constructor methods are invoked automatically. If one needs to be invoked,
+ * REALLoadObjectMethod should be used to get the appropriate function pointer.
+ *
+ * @param classDefn The non-NULL class definition.
+ * @result A new object.
+ * @version 2014r2
+ */
+REALobject REALnewInstanceOfClass(REALclassDefinition *classDefn) RB_WARN_UNUSED_RESULT RB_NON_NULL(1);
 
 void REALRegisterInterface(REALinterfaceDefinition *defn);
 
@@ -382,37 +461,23 @@ dbDatabase *REALGetDBFromREALdbDatabase(REALdbDatabase db);
 
 void REALConstructDBDatabase(REALdbDatabase db, dbDatabase *mydb, REALdbEngineDefinition *engine);
 
-#if TARGET_CARBON || TARGET_COCOA
-Boolean REALFSRefFromFolderItem(REALfolderItem f, FSRef*outRef, HFSUniStr255*outName) RB_WARN_UNUSED_RESULT;
-#endif
-
-#if TARGET_CARBON || TARGET_COCOA
-	#if FLAT_C_PLUGIN_HEADERS
-		REALfolderItem REALFolderItemFromParentFSRef(const FSRef *parent, const HFSUniStr255 *fileName) RB_WARN_UNUSED_RESULT;
-	#else
-REALfolderItem REALFolderItemFromParentFSRef(const FSRef& parent, const HFSUniStr255& fileName) RB_WARN_UNUSED_RESULT;
-#endif
-#endif
-
 REALDBConnectionDialogRef REALDBConnectionDialogCreate(void) RB_WARN_UNUSED_RESULT;
 
-void REALDBConnectionDialogAddField(REALDBConnectionDialogRef dialogRef, REALstring label, REALstring defaultText, Boolean maskField);
+void REALDBConnectionDialogAddField(REALDBConnectionDialogRef dialogRef, REALstring label, REALstring defaultText, bool maskField);
 
 REALstring REALDBConnectionDialogShow(REALDBConnectionDialogRef dialogRef, REALstring title);
 
 void REALDBConnectionDialogDelete(REALDBConnectionDialogRef dialogRef);
 
 #if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-REALpicture REALBuildPictureFromBuffer(long width, long height, RBPixelType pixelType, void*buffer, long rowBytes) RB_WARN_UNUSED_RESULT;
+REALpicture REALBuildPictureFromBuffer(uint32_t width, uint32_t height, RBPixelType pixelType, void*buffer, uint32_t rowBytes) RB_WARN_UNUSED_RESULT;
 #endif
 
 #if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-Boolean REALInDebugMode(void);
+bool REALInDebugMode(void);
 #endif
 
-#if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
 void REALStripAmpersands(REALstring*  ioString);
-#endif
 
 REALobject REALGetProjectFolder(void) RB_WARN_UNUSED_RESULT;
 
@@ -422,215 +487,89 @@ void *REALLoadFrameworkMethod( const char *prototype );
 
 void *REALLoadObjectMethod(REALobject object, const char *prototype);
 
-#if FLAT_C_PLUGIN_HEADERS
-	Boolean REALGetPropValueInt64(REALobject object, const char *propName, RBInt64 *value);
-	Boolean REALGetPropValueUInt64(REALobject object, const char *propName, RBUInt64 *value);
-	Boolean REALGetPropValueInt32(REALobject object, const char *propName, long *outValue);
-	Boolean REALGetPropValueUInt32(REALobject object, const char *propName, unsigned long *value);
-	Boolean REALGetPropValueInt16(REALobject object, const char *propName, short *value);
-	Boolean REALGetPropValueUInt16(REALobject object, const char *propName, unsigned short *value);
-	Boolean REALGetPropValueInt8(REALobject object, const char *propName, char *value);
-	Boolean REALGetPropValueUInt8(REALobject object, const char *propName, unsigned char *value);
-	Boolean REALGetPropValueDouble(REALobject object, const char *propName, double *outValue);
-	Boolean REALGetPropValueSingle(REALobject object, const char *propName, float *value);
-	Boolean REALGetPropValueString(REALobject object, const char *propName, REALstring *outValue);
-	Boolean REALGetPropValueObject(REALobject object, const char *propName, REALobject *outValue);
-	Boolean REALGetPropValuePtr( REALobject object, const char *propName, void **outValue );
-	Boolean REALGetPropValueCString( REALobject object, const char *propName, const char **value );
-	Boolean REALGetPropValueWString( REALobject object, const char *propName, const wchar_t **value );
-	Boolean REALGetPropValuePString( REALobject object, const char *propName, const unsigned char **value );
-	#if TARGET_CARBON || TARGET_COCOA
-		Boolean REALGetPropValueCFStringRef( REALobject object, const char *propName, CFStringRef *value );
-	#endif
-#else
-	Boolean REALGetPropValue(REALobject object, const char *propName, long *outValue);
-	Boolean REALGetPropValue(REALobject object, const char *propName, REALstring *outValue);
-	Boolean REALGetPropValue(REALobject object, const char *propName, double *outValue);
-	Boolean REALGetPropValue(REALobject object, const char *propName, REALobject *outValue);
-	Boolean REALGetPropValue(REALobject object, const char *propName, RBInt64 *value);
-	Boolean REALGetPropValue(REALobject object, const char *propName, RBUInt64 *value);
-	Boolean REALGetPropValue(REALobject object, const char *propName, unsigned long *value);
-	Boolean REALGetPropValue(REALobject object, const char *propName, unsigned short *value);
-	Boolean REALGetPropValue(REALobject object, const char *propName, short *value);
-	Boolean REALGetPropValue(REALobject object, const char *propName, unsigned char *value);
-	Boolean REALGetPropValue(REALobject object, const char *propName, char *outValue);
-	Boolean REALGetPropValue(REALobject object, const char *propName, float *value);
+REALproc REALInterfaceRoutine(REALobject obj, const char *interfaceName, const char *methodName);
 
-	Boolean REALGetPropValue( REALobject object, const char *propName, void **outValue );
-	Boolean REALGetPropValue( REALobject object, const char *propName, const char **value );
-	Boolean REALGetPropValue( REALobject object, const char *propName, const wchar_t **value );
-	Boolean REALGetPropValue( REALobject object, const char *propName, const unsigned char **value );
-	#if TARGET_CARBON || TARGET_COCOA
-		Boolean REALGetPropValue( REALobject object, const char *propName, CFStringRef *value );
-	#endif
+/**
+ * Loads a shared method the plugin can invoke.
+ *
+ * @param classRef A class reference that was obtained by calling REALGetClassRef
+ *                 during the plugin's main function.
+ * @param prototype The method prototype in Xojo syntax.
+ * @return A function pointer to invoke. Unlike instance methods loaded via
+ *         REALLoadObjectMethod, there is no implicit 0th parameter required.
+ * @version 2016r1
+ */
+void *REALLoadSharedMethod(REALclassRef classRef, const char *prototype);
 
-#endif
+/**
+ * Gets the value of a property on an object
+ *
+ * @param value Object of interest
+ * @param propName Property name to get
+ * @param result Receives value
+ * @return true if successful, false otherwise
+ * @version 2015r1
+ */
+bool REALGetPropValueText(REALobject value,
+	const char *propName,
+	REALtext *result) RB_NON_NULL(3);
 
-void REALSetDBIsConnected(REALdbDatabase database, Boolean connected);
+void REALSetDBIsConnected(REALdbDatabase database, bool connected);
+
+/**
+ * Creates a new Variant that holds a Text object
+ *
+ * @param value The Text object
+ * @return Variant object which holds the Text object
+ * @version 2015r1
+ */
+REALobject REALNewVariantText(REALtext value) RB_WARN_UNUSED_RESULT;
 
 REALobject REALNewVariantString(REALstring value) RB_WARN_UNUSED_RESULT;
 
-REALobject REALNewVariantInteger(long value) RB_WARN_UNUSED_RESULT;
+REALobject REALNewVariantInt32(int32_t value) RB_WARN_UNUSED_RESULT;
+
+REALobject REALNewVariantInteger(RBInteger value) RB_WARN_UNUSED_RESULT;
 
 REALobject REALNewVariantDouble(double value) RB_WARN_UNUSED_RESULT;
 
-REALobject REALNewVariantBoolean(Boolean value) RB_WARN_UNUSED_RESULT;
+REALobject REALNewVariantBoolean(bool value) RB_WARN_UNUSED_RESULT;
 
 REALobject REALNewVariantColor(RBColor value) RB_WARN_UNUSED_RESULT;
 
-REALobject REALNewVariantStructure( const void *data, unsigned long len ) RB_WARN_UNUSED_RESULT;
+REALobject REALNewVariantStructure( const void *data, size_t len ) RB_WARN_UNUSED_RESULT;
 
 REALobject REALNewVariantPtr( void *value ) RB_WARN_UNUSED_RESULT;
 REALobject REALNewVariantCString( const char *value ) RB_WARN_UNUSED_RESULT;
 REALobject REALNewVariantWString( const wchar_t *value ) RB_WARN_UNUSED_RESULT;
 REALobject REALNewVariantPString( const unsigned char *value ) RB_WARN_UNUSED_RESULT;
-REALobject REALNewVariantOSType( unsigned long value ) RB_WARN_UNUSED_RESULT;
+REALobject REALNewVariantOSType( uint32_t value ) RB_WARN_UNUSED_RESULT;
 #if TARGET_CARBON || TARGET_COCOA
 	REALobject REALNewVariantCFStringRef( CFStringRef value ) RB_WARN_UNUSED_RESULT;
 #endif
 
 
-REALarray REALCreateArray( REALArrayType type, long bounds ) RB_WARN_UNUSED_RESULT;
+REALarray REALCreateArray(REALArrayType type, RBInteger bounds) RB_WARN_UNUSED_RESULT;
 
-#if FLAT_C_PLUGIN_HEADERS
-	Boolean REALSetPropValueInt32(REALobject object, const char *propName, long value);
-	Boolean REALSetPropValueString(REALobject object, const char *propName, REALstring value);
-	Boolean REALSetPropValueDouble(REALobject object, const char *propName, double value);
-	Boolean REALSetPropValueObject(REALobject object, const char *propName, REALobject value);
-	Boolean REALSetPropValueBoolean(REALobject object, const char *propName, Boolean value);
-	Boolean REALSetPropValueUInt32(REALobject object, const char *propName, unsigned long value);
-	Boolean REALSetPropValueUInt64(REALobject object, const char *propName, RBUInt64 value);
-	Boolean REALSetPropValueInt64(REALobject object, const char *propName, RBInt64 value);
-	Boolean REALSetPropValueInt16(REALobject object, const char *propName, short value);
-	Boolean REALSetPropValueUInt16(REALobject object, const char *propName, unsigned short value);
-	Boolean REALSetPropValueInt8(REALobject object, const char *propName, char value);
-	Boolean REALSetPropValueUInt8(REALobject object, const char *propName, unsigned char value);
-	Boolean REALSetPropValueSingle(REALobject object, const char *propName, float value);
-	Boolean REALSetPropValuePtr( REALobject object, const char *propName, void *value );
-	Boolean REALSetPropValueCString( REALobject object, const char *propName, const char *value );
-	Boolean REALSetPropValueWString( REALobject object, const char *propName, const wchar_t *value );
-	Boolean REALSetPropValuePString( REALobject object, const char *propName, const unsigned char *value );
-	#if TARGET_CARBON || TARGET_COCOA
-		Boolean REALSetPropValueCFStringRef( REALobject object, const char *propName, CFStringRef value );
-	#endif
-
-	void REALInsertArrayValueInt64( REALarray arr, long index, RBInt64 value );
-	void REALInsertArrayValueInt32( REALarray arr, long index, long value );
-	void REALInsertArrayValueInt16( REALarray arr, long index, short value );
-	void REALInsertArrayValueInt8( REALarray arr, long index, char value );
-	void REALInsertArrayValueUInt64( REALarray arr, long index, RBUInt64 value );
-	void REALInsertArrayValueUInt32( REALarray arr, long index, unsigned long value );
-	void REALInsertArrayValueUInt16( REALarray arr, long index, unsigned short value );
-	void REALInsertArrayValueUInt8( REALarray arr, long index, unsigned char value );
-	void REALInsertArrayValueSingle( REALarray arr, long index, float value );
-	void REALInsertArrayValueDouble( REALarray arr, long index, double value );
-	void REALInsertArrayValueBoolean( REALarray arr, long index, Boolean value );
-	void REALInsertArrayValueObject( REALarray arr, long index, REALobject value );
-	void REALInsertArrayValueString( REALarray arr, long index, REALstring value );
-
-	void REALGetArrayValueInt64( REALarray arr, long index, RBInt64 *value );
-	void REALGetArrayValueInt32( REALarray arr, long index, long *value );
-	void REALGetArrayValueInt16( REALarray arr, long index, short *value );
-	void REALGetArrayValueInt8( REALarray arr, long index, char *value );
-	void REALGetArrayValueUInt64( REALarray arr, long index, RBUInt64 *value );
-	void REALGetArrayValueUInt32( REALarray arr, long index, unsigned long *value );
-	void REALGetArrayValueUInt16( REALarray arr, long index, unsigned short *value );
-	void REALGetArrayValueUInt8( REALarray arr, long index, unsigned char *value );
-	void REALGetArrayValueSingle( REALarray arr, long index, float *value );
-	void REALGetArrayValueDouble( REALarray arr, long index, double *value );
-	void REALGetArrayValueBoolean( REALarray arr, long index, Boolean *value );
-	void REALGetArrayValueObject( REALarray arr, long index, REALobject *value );
-	void REALGetArrayValueString( REALarray arr, long index, REALstring *value );
-
-	void REALSetArrayValueInt64( REALarray arr, long index, RBInt64 value );
-	void REALSetArrayValueInt32( REALarray arr, long index, long value );
-	void REALSetArrayValueInt16( REALarray arr, long index, short value );
-	void REALSetArrayValueInt8( REALarray arr, long index, char value );
-	void REALSetArrayValueUInt64( REALarray arr, long index, RBUInt64 value );
-	void REALSetArrayValueUInt32( REALarray arr, long index, unsigned long value );
-	void REALSetArrayValueUInt16( REALarray arr, long index, unsigned short value );
-	void REALSetArrayValueUInt8( REALarray arr, long index, unsigned char value );
-	void REALSetArrayValueSingle( REALarray arr, long index, float value );
-	void REALSetArrayValueDouble( REALarray arr, long index, double value );
-	void REALSetArrayValueBoolean( REALarray arr, long index, Boolean value );
-	void REALSetArrayValueObject( REALarray arr, long index, REALobject value );
-	void REALSetArrayValueString( REALarray arr, long index, REALstring value );
-
-#else
-	Boolean REALSetPropValue(REALobject object, const char *propName, long value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, REALstring value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, double value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, REALobject value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, unsigned long value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, RBUInt64 value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, RBInt64 value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, short value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, unsigned short value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, Boolean value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, char value);
-	Boolean REALSetPropValueUInt8(REALobject object, const char *propName, unsigned char value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, float value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, const char *value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, const wchar_t *value);
-	Boolean REALSetPropValue(REALobject object, const char *propName, const unsigned char *value);
-	Boolean REALSetPropValuePtr( REALobject object, const char *propName, void *value );
-	#if TARGET_CARBON || TARGET_COCOA
-		Boolean REALSetPropValue(REALobject object, const char *propName, CFStringRef value);
-	#endif
-
-	void REALInsertArrayValue( REALarray arr, long index, RBInt64 value );
-	void REALInsertArrayValue( REALarray arr, long index, long value );
-	void REALInsertArrayValue( REALarray arr, long index, short value );
-	void REALInsertArrayValue( REALarray arr, long index, char value );
-	void REALInsertArrayValue( REALarray arr, long index, RBUInt64 value );
-	void REALInsertArrayValue( REALarray arr, long index, unsigned long value );
-	void REALInsertArrayValue( REALarray arr, long index, unsigned short value );
-	void REALInsertArrayValueUInt8( REALarray arr, long index, unsigned char value );
-	void REALInsertArrayValue( REALarray arr, long index, float value );
-	void REALInsertArrayValue( REALarray arr, long index, double value );
-	void REALInsertArrayValue( REALarray arr, long index, Boolean value );
-	void REALInsertArrayValue( REALarray arr, long index, REALobject value );
-	void REALInsertArrayValue( REALarray arr, long index, REALstring value );
-
-	void REALGetArrayValue( REALarray arr, long index, RBInt64 *value );
-	void REALGetArrayValue( REALarray arr, long index, long *value );
-	void REALGetArrayValue( REALarray arr, long index, short *value );
-	void REALGetArrayValue( REALarray arr, long index, char *value );
-	void REALGetArrayValue( REALarray arr, long index, RBUInt64 *value );
-	void REALGetArrayValue( REALarray arr, long index, unsigned long *value );
-	void REALGetArrayValue( REALarray arr, long index, unsigned short *value );
-	void REALGetArrayValueUInt8( REALarray arr, long index, unsigned char *value );
-	void REALGetArrayValue( REALarray arr, long index, float *value );
-	void REALGetArrayValue( REALarray arr, long index, double *value );
-	void REALGetArrayValue( REALarray arr, long index, Boolean *value );
-	void REALGetArrayValue( REALarray arr, long index, REALobject *value );
-	void REALGetArrayValue( REALarray arr, long index, REALstring *value );
-
-	void REALSetArrayValue( REALarray arr, long index, RBInt64 value );
-	void REALSetArrayValue( REALarray arr, long index, long value );
-	void REALSetArrayValue( REALarray arr, long index, short value );
-	void REALSetArrayValue( REALarray arr, long index, char value );
-	void REALSetArrayValue( REALarray arr, long index, RBUInt64 value );
-	void REALSetArrayValue( REALarray arr, long index, unsigned long value );
-	void REALSetArrayValue( REALarray arr, long index, unsigned short value );
-	void REALSetArrayValueUInt8( REALarray arr, long index, unsigned char value );
-	void REALSetArrayValue( REALarray arr, long index, float value );
-	void REALSetArrayValue( REALarray arr, long index, double value );
-	void REALSetArrayValue( REALarray arr, long index, Boolean value );
-	void REALSetArrayValue( REALarray arr, long index, REALobject value );
-	void REALSetArrayValue( REALarray arr, long index, REALstring value );
-#endif
+/**
+ * Sets the value of a Text property on an object.
+ *
+ * @param object The object whose property is being set.
+ * @param propName Property name to set.
+ * @param value The Text value to assign to the property.
+ * @return Whether or not the property was successfully set.
+ * @version 2015r1
+ */
+bool REALSetPropValueText(REALobject object,
+	const char *propName,
+	REALtext value);
 
 dbCursor *REALGetCursorFromREALdbCursor(REALdbCursor cursor);
 
-Boolean REALLockPictureDescription(REALpicture pic, REALpictureDescription *description, long picType);
-#if !FLAT_C_PLUGIN_HEADERS
-	void REALLockPictureDescription(REALpicture pic, REALpictureDescription *description);
-#else
-	void REALLockPictureDescriptionWithNativeType(REALpicture pic, REALpictureDescription *description);	
-#endif
+bool REALLockPictureDescription(REALpicture pic, REALpictureDescription *description, uint32_t picType);
+void REALLockPictureDescriptionWithNativeType(REALpicture pic, REALpictureDescription *description);	
 
-REALobject REALNewVariantUInt32(unsigned long value) RB_WARN_UNUSED_RESULT;
+REALobject REALNewVariantUInt32(uint32_t value) RB_WARN_UNUSED_RESULT;
 
 REALobject REALNewVariantInt64(RBInt64 value) RB_WARN_UNUSED_RESULT;
 
@@ -640,425 +579,185 @@ REALobject REALNewVariantSingle(float value) RB_WARN_UNUSED_RESULT;
 
 REALobject REALNewVariantCurrency(REALcurrency value) RB_WARN_UNUSED_RESULT;
 
-unsigned long REALstringToOSType(REALstring id);
+uint32_t REALstringToOSType(REALstring id);
 
-unsigned long REALGetStringEncoding(REALstring str);
-void REALSetStringEncoding(REALstring str, unsigned long encoding);
-REALstring REALConvertString(REALstring str, unsigned long encoding) RB_WARN_UNUSED_RESULT;
-unsigned long REALWin32CodePageToEncoding( unsigned long codePage );
+size_t REALStringLength(REALstring str);
+
+void *REALGetStringContents(REALstring str, size_t *numBytes);
+
+uint32_t REALGetStringEncoding(REALstring str);
+
+REALstring REALConvertString(REALstring str, uint32_t encoding) RB_WARN_UNUSED_RESULT;
+
+uint32_t REALWin32CodePageToEncoding(uint32_t codePage);
 
 void REALGetControlBounds(REALcontrolInstance instance, Rect *rBounds);
-long REALGetControlPosition(REALcontrolInstance instance, long which);
-void REALSetControlPosition(REALcontrolInstance instance, long which, long value);
 
-long REALGetControlVisible(REALcontrolInstance instance);
-void REALSetControlVisible(REALcontrolInstance instance, unsigned long visible);
-
-Boolean REALGetControlEnabled(REALcontrolInstance instance);
-void REALSetControlEnabled(REALcontrolInstance instance, long unused, Boolean enable);
-
-#if TARGET_COCOA
-	NSView *REALGetControlHandle(REALcontrolInstance control);
-#elif TARGET_CARBON
-	ControlHandle REALGetControlHandle(REALcontrolInstance control);
-#elif TARGET_WIN32
-	HWND REALGetControlHandle(REALcontrolInstance control);
-#elif X_WINDOW
-	unsigned long REALGetControlHandle(REALcontrolInstance control);
-#endif
-
-REALwindow REALGetControlWindow(REALcontrolInstance instance) RB_WARN_UNUSED_RESULT;
-
-#if TARGET_COCOA || TARGET_CARBON
-CGImageRef REALCopyPictureCGImage(REALpicture pic) RB_WARN_UNUSED_RESULT;
-#endif
-
-#if FLAT_C_PLUGIN_HEADERS && defined(__cplusplus)
-	}
-#endif
-
-/****************** DEPRECATED FUNCTIONALITY **********************/
-// Anything below this point is to be considered deprecated 
-// functionality, and should be avoided except in extreme cases.
-
-#if __GNUC__
-	// Compiling with GCC of some sort
-	#define	DEPRECATED		__attribute__ ((deprecated))
-#else
-	#define	DEPRECATED
-#endif
-
-// define some constants for use with REALGetControlPosition etc.
-#define kREALLeft 0
-#define kREALTop 1
-#define kREALWidth 2
-#define kREALHeight 3
-
-#define REALpropInvalidate 				(1 << 0)
-
-#define REALenabledControl 				(1 << 4)
-
-extern struct REALstringStruct
-{
-// This structure is for examination purposes only!
-// Do not construct them yourself - use REALBuildString!
-#ifdef __cplusplus
-	long Length(void);
-	const char *CString();
-	const unsigned char *PString();
-#endif
-} REALstringStruct;
-
-typedef struct 
-{
-	const char *szInterface;
-	const char *szDescription;
-	const char *szPart;
-} REALbindingDescription;
-
-struct REALpopupMenuStruct;
-typedef struct REALpopupMenuStruct *REALpopupMenu;
-
-struct REALmemoryBlockStruct;
-typedef struct REALmemoryBlockStruct *REALmemoryBlock;
-
-struct REALsocketStruct;
-typedef struct REALsocketStruct *REALsocket;
-
-struct REALintArrayStruct;
-typedef struct REALintArrayStruct *REALintArray;
-
-struct REALstringArrayStruct;
-typedef struct REALstringArrayStruct *REALstringArray;
-
-struct REALobjectArrayStruct;
-typedef struct REALobjectArrayStruct *REALobjectArray;
-
-struct REALmoviePlayerStruct;
-typedef struct REALmoviePlayerStruct *REALmoviePlayer;
-
-struct REALstructureArrayStruct;
-typedef struct REALstructureArrayStruct *REALstructureArray;
-
-enum REALControlStateChangedBits {
-	kActivationChanged = 1,
-	kEnabledChanged = 2,
-	kVisibilityChanged = 4,
-	kBoundsChanged = 8
-};
-
-#define kREALfontStyleVersion 2
-
-typedef struct
-{
-	long version;				// this should always be kREALfontStyleVersion
-	REALstring fontName;		// name of the font or metafont (e.g. "System"); may be nil
-	long fontSize;				// font size in points
-	long color;					// color in standard plugin form, i.e. 0x00RRGGBB
-	Boolean bold;				// style attributes
-	Boolean italic;
-	Boolean underline;
-	unsigned char fontUnit;		// 0 - Default, 1 - Pixel, 2 - Point, 3 - Inches, 4 - Millimeters
-} REALfontStyle;
-
-// socket constants
-#define socketEventConnect 1
-#define socketEventError 2
-#define socketEventDataReceived 4
-#define socketEventSendComplete 8
-
-
-#if FLAT_C_PLUGIN_HEADERS && defined( __cplusplus )
-	extern "C" {
-#endif
-
-void *REALLoadGlobalMethod( const char *module, const char *prototype ) DEPRECATED;
-
-// You can use these methods to register a global structure
-// or enumeration in much the same way you can register 
-// global methods.  Note: be careful when adding anything
-// to the global namespace as it could cause conflicts.  Use
-// these methods with extreme caution.
-void REALRegisterStructure( REALstructure *defn ) DEPRECATED;
-void REALRegisterEnum( REALenum *defn ) DEPRECATED;
-
-REALobject REALnewInstance(const char *className) DEPRECATED;
-
-#if TARGET_CARBON && !TARGET_COCOA
-int REALallocateMenuID(void) DEPRECATED;
-#endif
-
-#if TARGET_CARBON && !COCOA
-void REALreleaseMenuID(int id) DEPRECATED;
-#endif
-
-void GraphicsDrawLine(REALgraphics graphicsObject, int x1, int y1, int x2, int y2) DEPRECATED;
-void REALRegisterMethod(REALmethodDefinition *defn) DEPRECATED;
-void REALRegisterClassExtension(REALclassDefinition *defn) DEPRECATED;
-
-const char *REALCString(REALstring str) DEPRECATED;
-const unsigned char *REALPString(REALstring str) DEPRECATED;
-
-REALstring REALInterpretConstantValue(REALstring value) DEPRECATED;
-REALstring REALDefaultControlCaption(void) DEPRECATED;
-
-#if TARGET_CARBON && !COCOA
-void REALRegisterEventFilter(REALEventCallback callback, long param) DEPRECATED;
-#endif
-
-REALproc REALInterfaceRoutine(REALobject obj, const char *interfaceName, const char *methodName) DEPRECATED;
-
-void REALPictureClearCache(REALpicture pic) DEPRECATED;
-
-#if TARGET_WIN32
-void REALDrawPicturePrimitive(HDC hDC, REALpicture pic, const Rect *rBounds, int bTransparent) DEPRECATED;
-#endif
-
-#if TARGET_CARBON || COCOA
-void REALDrawPicturePrimitive(REALpicture pic, const Rect *rBounds, int bTransparent) DEPRECATED;
-#endif
-
-REALgraphics REALGetControlGraphics(REALcontrolInstance instance) DEPRECATED;
-
-#if TARGET_WIN32
-int REALGetWin32Charset(void) DEPRECATED;
-#endif
-
-#if TARGET_WIN32 || UNIX_ANSI
-REALfolderItem REALFolderItemFromPath(const char *path) DEPRECATED;
-#endif
-
-#if TARGET_WIN32
-HWND REALGetControlHWND(REALcontrolInstance control) DEPRECATED;
-#endif
-
-void REALInvalidateControl(REALcontrolInstance instance) DEPRECATED;
-
-void REALInvalidateControlRect(REALcontrolInstance instance, int left, int top, int right, int bottom) DEPRECATED;
-
-#if TARGET_WIN32
-void REALSetSpecialBackground(REALcontrolInstance instance, COLORREF *pcolor) DEPRECATED;
-#endif
-
-#if TARGET_CARBON && !COCOA
-void REALSetSpecialBackground(REALcontrolInstance instance) DEPRECATED;
-#endif
-
-#if TARGET_COCOA
-	NSWindow *REALGetWindowHandle(REALwindow window) DEPRECATED;
-#elif TARGET_CARBON
-WindowPtr REALGetWindowHandle(REALwindow window) DEPRECATED;
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-MenuHandle REALGetPopupMenuHandle(REALpopupMenu popup) DEPRECATED;
-#endif
-
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-QT_NAMESPACE MovieController REALgetMoviePlayerController(REALmoviePlayer instance) DEPRECATED;
-#endif
-
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-QT_NAMESPACE Movie REALgetMovieMovie(REALmovie instance) DEPRECATED;
-#endif
-
-void REALMarkSocketUsage(void) DEPRECATED;
-
-void REALSocketConnect(REALsocket socket, REALstring address, int port) DEPRECATED;
-
-void REALSocketClose(REALsocket socket) DEPRECATED;
-
-REALstring REALSocketReadAll(REALsocket socket) DEPRECATED;
-
-REALstring REALSocketRead(REALsocket socket, int count) DEPRECATED;
-
-void REALSocketWrite(REALsocket socket, REALstring data) DEPRECATED;
-
-int REALSocketLastErrorCode(REALsocket socket, int unused) DEPRECATED;
-
-REALstring REALSocketLookahead(REALsocket socket, int unused) DEPRECATED;
-
-REALstring REALSocketLocalAddressGetter(REALsocket socket) DEPRECATED;
-
-void REALSocketPoll(REALsocket socket) DEPRECATED;
-
-int REALSocketGetEvents(REALsocket socket, int unused) DEPRECATED;
-
-void REALMessageBox(REALstring text) DEPRECATED;
-
-#if TARGET_CARBON && !TARGET_COCOA
-void REALRefreshWindow(unsigned long macWindowPtr) DEPRECATED;
-#endif
-
-REALgraphics REALGetPictureGraphics(REALpicture picture) DEPRECATED;
-
-REALpicture REALNewPicture(long width, long height, long depth) DEPRECATED;
-
-REALmemoryBlock REALNewMemoryBlock(int bytes) DEPRECATED;
-
-void*REALMemoryBlockGetPtr(REALmemoryBlock memBlock) DEPRECATED;
-
-int REALMemoryBlockGetSize(REALmemoryBlock memBlock) DEPRECATED;
-
-REALmemoryBlock REALPtrToMemoryBlock(void*data) DEPRECATED;
-
-int REALGetArrayInt(REALintArray array, int index) DEPRECATED;
-
-REALstring REALGetArrayString(REALstringArray array, int index) DEPRECATED;
-
-REALobject REALGetArrayObject(REALobjectArray array, int index) DEPRECATED;
-
-long REALGetTabPanelVisible(REALcontrolInstance instance) DEPRECATED;
-
-#if TARGET_WIN32
-HWND REALGetWindowHandle(REALwindow window) DEPRECATED;
-#endif
-
-Boolean REALGetControlFocus(REALcontrolInstance instance) DEPRECATED;
-
-void REALSetControlFocus(REALcontrolInstance instance, Boolean focus) DEPRECATED;
-
-REALcontrolInstance REALGetControlParent(REALcontrolInstance instance) DEPRECATED;
-
-REALstring REALGetControlName(REALcontrolInstance control) DEPRECATED;
-
-Boolean REALIsHIViewWindow(REALwindow window) DEPRECATED;
-
-#if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-unsigned long REALGetFontEncoding(const char *fontName) DEPRECATED;
-#endif
-
-#if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-REALpicture REALGetPictureMask(REALpicture pict, Boolean createIfNil) DEPRECATED;
-#endif
-
-#if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-void REALGraphicsDrawString(REALgraphics graphics, REALstring str, long x, long y, long width) DEPRECATED;
-#endif
-
-#if TARGET_CARBON || TARGET_COCOA
-#ifdef CF_RETURNS_RETAINED
-	CFStringRef REALGetStringCFString(REALstring str, Boolean stripAmpersands) CF_RETURNS_RETAINED DEPRECATED;
-#else
-	CFStringRef REALGetStringCFString(REALstring str, Boolean stripAmpersands) DEPRECATED;
-#endif
-#endif
-
-#if TARGET_CARBON || TARGET_COCOA
-void REALGetStringSystemStr(REALstring str, Boolean stripAmpersands, Str255 outStr255) DEPRECATED;
-#endif
-
-#if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-void REALGetGraphicsFontStyle(REALgraphics graphics, REALfontStyle*  outStyle) DEPRECATED;
-#endif
-
-#if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-void REALSetGraphicsStyle(REALgraphics graphics, REALfontStyle*  styleInfo) DEPRECATED;
-#endif
-
-long REALGraphicsStringWidth(REALgraphics graphics, REALstring str) DEPRECATED;
-
-long REALGraphicsStringHeight(REALgraphics graphics, REALstring str, long wrapWidth) DEPRECATED;
-
-long REALGraphicsTextHeight(REALgraphics graphics) DEPRECATED;
-
-long REALGraphicsTextAscent(REALgraphics graphics) DEPRECATED;
-
-#if TARGET_CARBON && !TARGET_COCOA
-void REALReleasePopupMenuHandle(REALpopupMenu popup) DEPRECATED;
-#endif
-
-void REALSocketListen(REALsocket socket) DEPRECATED;
-
-#if X_WINDOW
-unsigned long REALGraphicsDC(REALgraphics context) DEPRECATED;
-#endif
-
-#if COCOA
-		CGContextRef REALGraphicsDC(REALgraphics context) DEPRECATED;
-#endif
-		
-#if X_WINDOW
-void REALDrawPicturePrimitive(REALgraphics context, REALpicture pic, const Rect *rBounds, int bTransparent) DEPRECATED;
-#endif
-
-#if FLAT_C_PLUGIN_HEADERS
-	#if TARGET_WIN32
-		REALgraphics REALGetControlGraphicsWithDC(REALcontrolInstance instance, HDC dc) DEPRECATED;
-	#endif
-#else
-	#if TARGET_WIN32
-		REALgraphics REALGetControlGraphics(REALcontrolInstance instance, HDC dc) DEPRECATED;
-	#endif
-#endif
-
-#if X_WINDOW
-void *REALGraphicsGdkDrawable(REALgraphics context) DEPRECATED;
-#endif
-
-#if X_WINDOW
-unsigned long REALGetWindowHandle(REALwindow window) DEPRECATED;
-#endif
-
-void REALGetGraphicsOrigin(REALgraphics context, long *originX, long *originY) DEPRECATED;
-
-void REALSetGraphicsOrigin(REALgraphics context, long originX, long originY) DEPRECATED;
-
-REALstring REALpathFromFolderItem(REALfolderItem item) DEPRECATED;
-
-#if TARGET_WIN32
-HDC REALGraphicsDC(REALgraphics context) DEPRECATED;
-#endif
+bool REALGetControlVisible(REALcontrolInstance instance);
+void REALSetControlVisible(REALcontrolInstance instance, bool visible);
 
 #if TARGET_WIN32 || X_WINDOW
-void REALSetAccelerator(REALcontrolInstance instance, REALstring key) DEPRECATED;
+/**
+* Sets the accelerator/shortcut key for the control
+*
+* @param instance The control to set the accelerator key for
+* @param key The desired accelerator key with the ampersand, i.e. pass "&a", not just "a"
+*			It is ok to pass the full caption, i.e. Win&dows would be parsed for &d
+*/
+void REALSetAccelerator(REALcontrolInstance instance, REALstring key);
 #endif
 
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-void REALSetMovieMovie(REALmovie obj, Movie movie) DEPRECATED;
+/**
+* Gets the graphic's drawing origin relative to the control that owns the context
+*
+* @param context The graphics context to obtain the drawing origin from
+* @param originX Drawing is offset by this much in the horizontal direction
+* @param originY Drawing is offset by this much in the vertical direction
+*/
+void REALGetGraphicsOrigin(REALgraphics context, int32_t *originX, int32_t *originY);
+
+/**
+* Sets the graphic's drawing origin relative to the control that owns the context
+*
+* @param context The graphics context to set the drawing origin to
+* @param originX Drawing to be offset by this much in the horizontal direction
+* @param originY Drawing to be offset by this much in the vertical direction
+*/
+void REALSetGraphicsOrigin(REALgraphics context, int32_t originX, int32_t originY);
+
+#if TARGET_WIN32
+/**
+* Releases the device context from memory, and more importantly, flushes the drawing
+* done on handle to our Direct2D backed surface.  This must be paired with each call
+* to Graphics.Handle or REALGraphicsDC
+*
+* @param context The graphics context to release HDC from
+*/
+void REALGraphicsReleaseDC(REALgraphics context);
 #endif
 
-#if (TARGET_CARBON || TARGET_COCOA) && !TARGET_64BIT
-REALfolderItem REALFolderItemFromFSSpec(const FSSpec *spec) DEPRECATED;
+#if TARGET_WIN32
+void REALSetSpecialBackground(REALcontrolInstance instance, COLORREF *pcolor);
 #endif
 
-#if (TARGET_CARBON || TARGET_COCOA) && !TARGET_64BIT
-Boolean REALFSSpecFromFolderItem(FSSpec *spec, REALfolderItem item) DEPRECATED;
-#endif
+/**
+* Gets the default system text encoding for the platform
+*
+* @return on OS X and Linux this returns kREALTextEncodingUTF8, on Windows it will vary
+*/
+uint32_t REALGetSystemTextEncoding(void);
 
-void *REALGetStringContents( REALstring str, size_t *numBytes ) DEPRECATED;
+void REALPictureClearCache(REALpicture pic);
 
-#if FLAT_C_PLUGIN_HEADERS && defined(__cplusplus)
+/**
+ * Retrieves a Picture's Type property, which is completely unrelated to the
+ * type in REALpictureDescription.
+ *
+ * @version 2016r1
+ */
+RBInteger REALGetPictureType(REALpicture pic) RB_NON_NULL(1);
+
+
+/**
+* Returns the number of properties for the specified object
+*
+* @version Added in 2019r2, but this API can be used in 2012 or even earlier
+*/
+RBInteger REALCountClassProperties(REALobject obj);
+
+/**
+* Retreives the property getter, setter, and declaration
+*
+* @param obj The object to get the property for
+* @param index The number of the property to be extracted
+* @param getter Address of a variable to contain the property's getter
+* @param setter Address of a variable to contain the property's setter
+* @param param Address of a variable to contain the parameter to pass the getter and setter
+* @param declaration Address of a string to contain its declaration
+* @return True if the property was found, false if it was not
+*
+* @version Added in 2019r2, but this API can be used in 2012 or even earlier
+*/
+RBBoolean REALGetClassProperty(REALobject obj, uint32_t index, void **getter, void **setter, long *param, REALstring *declaration);
+
+/**
+* Adds event implementation for the specified event handler
+*
+* @param obj The object to add a handler for
+* @param eventName The name of the event to add a handler for
+* @param handler A pointer to the handler function with at least the first parameter being the object
+* @return True if the event was found and the handler was successfully added, false otherwise
+*
+* @version Added in 2020r1
+*/
+RBBoolean REALAddEventHandler(REALobject obj, REALstring eventName, void *handler);
+
+/**
+* Removes an event implementation for the specified object
+*
+* @param obj The object to remove a handler for
+* @param eventName The name of the event to remove a handler for
+* @param handler A pointer to the handler function that was used in REALAddEventHandler
+* @return True if the event was found and the handler was successfully removed, false otherwise
+*
+* @version Added in 2020r1
+*/
+RBBoolean REALRemoveEventHandler(REALobject obj, REALstring eventName, void *handler);
+
+/**
+* Checks to see if an event is handled
+*
+* @param obj The object to check against
+* @param eventName The name of the event to check
+* @return True if the event is handled, false otherwise
+*
+* @version Added in 2020r1
+*/
+RBBoolean REALIsEventHandled(REALobject obj, REALstring eventName);
+
+/**
+* Checks to see if the app is running in dark mode
+*
+* @return True if the app is running with dark mode support, false otherwise
+* @note This is the optimized version of the same dynamic access call through Color.IsDarkMode
+*
+* @version Added in 2021r3
+*/
+RBBoolean REALIsDarkMode();
+
+/**
+* Gets the top-level Window of the specified control
+*
+* @return The host Window, or DesktopWindow, of the specified control.
+* @note The returned object is not locked upon return.
+*
+* @version Undeprecated in 2021r3
+*/
+REALwindow REALGetControlWindow(REALcontrolInstance instance) RB_WARN_UNUSED_RESULT;
+
+/**
+* Gets state of current thread execution
+*
+* @return True is current execution is in a Xojo thread (but not Xojo's main thread)
+* @note This is only supported for Console (including Web) and Desktop.
+*
+* @version Added in 2021r3
+*/
+RBBoolean REALIsXojoThread() RB_WARN_UNUSED_RESULT;
+
+/**
+* Gets state of current thread execution
+*
+* @return True is current execution is in Xojo's main thread
+* @note This is only supported for Console (including Web) and Desktop.
+*
+* @version Added in 2021r3
+*/
+RBBoolean REALIsXojoMainThread() RB_WARN_UNUSED_RESULT;
+
+#if defined(__cplusplus)
 	}
 #endif
 
-#if _MSC_VER
-	// Compiling with Visual Studio of some sort
-	#pragma deprecated( GraphicsDrawLine, REALallocateMenuID, REALbuildMovie, REALDrawPicturePrimitive ) 
-	#pragma deprecated( REALDrawPicturePrimitive, REALDrawPicturePrimitive,REALFolderItemFromPath )
-	#pragma deprecated( REALGetArrayInt,REALGetArrayObject,REALGetArrayString )
-	#pragma deprecated( REALGetControlFocus,REALGetControlGraphics,REALGetControlGraphics )
-	#pragma deprecated( REALGetControlHWND )
-	#pragma deprecated( REALGetControlName,REALGetControlParent )
-	#pragma deprecated( REALGetFontEncoding,REALGetGraphicsFontStyle,REALGetGraphicsOrigin )
-	#pragma deprecated( REALgetMovieMovie,REALgetMoviePlayerController,REALGetPictureGraphics )
-	#pragma deprecated( REALGetPictureMask,REALGetPopupMenuHandle,REALGetStringSystemStr,REALGetTabPanelVisible )
-	#pragma deprecated( REALGetWin32Charset,REALGetWindowHandle,REALGetWindowHandle )
-	#pragma deprecated( REALGraphicsDC,REALGraphicsDC,REALGraphicsDrawString,REALGraphicsGdkDrawable )
-	#pragma deprecated( REALGraphicsStringHeight,REALGraphicsStringWidth,REALGraphicsTextAscent )
-	#pragma deprecated( REALGraphicsTextHeight,REALInterfaceRoutine,REALInvalidateControl,REALInvalidateControlRect )
-	#pragma deprecated( REALIsHIViewWindow,REALMarkSocketUsage,REALMemoryBlockGetSize,REALMessageBox )
-	#pragma deprecated( REALNewMemoryBlock,REALNewPicture,REALpathFromFolderItem,REALPictureClearCache )
-	#pragma deprecated( REALRefreshWindow,REALRegisterClassExtension,REALRegisterEventFilter,REALRegisterMethod )
-	#pragma deprecated( REALreleaseMenuID,REALReleasePopupMenuHandle,REALSetAccelerator )
-	#pragma deprecated( REALSetControlFocus,REALSetGraphicsOrigin )
-	#pragma deprecated( REALSetGraphicsStyle,REALSetMovieMovie,REALSetSpecialBackground,REALSetSpecialBackground )
-	#pragma deprecated( REALSocketClose,REALSocketConnect,REALSocketGetEvents,REALSocketLastErrorCode )
-	#pragma deprecated( REALSocketListen,REALSocketLocalAddressGetter,REALSocketLookahead,REALSocketPoll )
-	#pragma deprecated( REALSocketRead,REALSocketReadAll,REALSocketWrite,REALMemoryBlockGetPtr )
-	#pragma deprecated( REALPtrToMemoryBlock,REALQDGlobals,REALCString,REALPString,REALGetStringCFString )
-	#pragma deprecated( REALRegisterEventFilter, REALFolderItemFromFSSpec, REALFSSpecFromFolderItem )
-	#pragma deprecated( REALLoadGlobalMethod, REALGetStringContents )
-#endif
 
-#endif
+#endif	// RB_PLUGIN_H

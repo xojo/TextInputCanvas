@@ -49,6 +49,11 @@ void TextInputWindows::InsertNewLine()
 	FireDoCommand( mControl, "insertNewline:" );
 }
 
+void TextInputWindows::InsertBreakCommand()
+{
+	FireDoCommand(mControl, "insertBreakCommand:");
+}
+
 void TextInputWindows::InsertUnicodeChar( long unicodeChar )
 {
 	REALstring key = UnicodeCharToString( unicodeChar );
@@ -118,8 +123,16 @@ LRESULT CALLBACK TextInputWindows::WindowProc( HWND hWnd, UINT message, WPARAM w
 			}
 			break;
 		case WM_CHAR:
-			if (wParam == VK_RETURN) ti->InsertNewLine();
-			else if (wParam > 31) ti->InsertUnicodeChar( wParam );
+			if (wParam == VK_RETURN) {
+				ti->InsertNewLine();
+				return 0;
+			} else if (wParam == VK_CANCEL) {
+				ti->InsertBreakCommand();
+				return 0;
+			} else if (wParam > 31) {
+				ti->InsertUnicodeChar(wParam);
+				return 0;
+			}
 			break;
 		case WM_IME_STARTCOMPOSITION:
 			ti->StartComposition( hWnd );

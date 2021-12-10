@@ -1,19 +1,10 @@
 // CarbonHeaders.h
 //
-//	This file is part of the REALbasic plugin API.  You will usually want
-//	to use this as the prefix for your Carbon plugin targets.
+// This file used to be a required prefix header but is now only included for
+// backwards compatibility. There is no longer a need to use prefix headers.
 //
-// © 1997-2004 REAL Software Inc. -- All Rights Reserved
+// (c) 1997-2015 REAL Software Inc. -- All Rights Reserved
 // See file "Plug-in License SDK.txt" for details.
 
-#define TARGET_API_MAC_CARBON 1
 #define CARBON 1
-
-#ifdef __GNUC__
-	#include <Carbon/Carbon.h>
-	#include <QuickTime/QuickTime.h> // needed because it wasn't included in new Carbon headers
-#else
-	#include <fenv.h>	// (sometimes needed to avoid a bug in Metrowerks header-finding)
-	#include <Carbon.h>
-	#include <Movies.h> // needed because it wasn't included in new Carbon headers
-#endif
+#include <Carbon/Carbon.h>

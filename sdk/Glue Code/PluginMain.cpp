@@ -5,110 +5,21 @@
 // (c) 2013 Xojo, Inc. -- All Rights Reserved
 // See file "Plug-in License SDK.txt" for details.
 
-// If we're using visual studio, we need
-// to include winheader++.h
-#ifdef _MSC_VER
-	#include "WinHeader++.h"
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "REALplugin.h"
 #include "rb_plugin.h"
 
-#if !FLAT_C_PLUGIN_HEADERS
-	#define REALnewInstanceWithClass REALnewInstance
-	#define REALGetPropValueInt32 REALGetPropValue
-	#define REALGetPropValueString REALGetPropValue
-	#define REALGetPropValueDouble REALGetPropValue
-	#define REALGetPropValueObject REALGetPropValue
-	#define REALGetPropValueUInt8 REALGetPropValue
-	#define REALGetPropValueInt64 REALGetPropValue
-	#define REALGetPropValueUInt64 REALGetPropValue
-	#define REALGetPropValueUInt32 REALGetPropValue
-	#define REALGetPropValueUInt16 REALGetPropValue
-	#define REALGetPropValueInt16 REALGetPropValue
-	#define REALGetPropValueInt8 REALGetPropValue
-	#define REALGetPropValueSingle REALGetPropValue
-	#define REALGetPropValuePtr REALGetPropValue
-	#define REALGetPropValueCString REALGetPropValue
-	#define REALGetPropValueWString REALGetPropValue
-	#define REALGetPropValuePString REALGetPropValue
-#if TARGET_CARBON || TARGET_COCOA
-	#define REALGetPropValueCFStringRef REALGetPropValue
-#endif
-	#define REALSetPropValueInt32 REALSetPropValue
-	#define REALSetPropValueString REALSetPropValue
-	#define REALSetPropValueDouble REALSetPropValue
-	#define REALSetPropValueObject REALSetPropValue
-	#define REALSetPropValueUInt8 REALSetPropValue
-	#define REALSetPropValueUInt32 REALSetPropValue
-	#define REALSetPropValueUInt64 REALSetPropValue
-	#define REALSetPropValueInt64 REALSetPropValue
-	#define REALSetPropValueInt16 REALSetPropValue
-	#define REALSetPropValueUInt16 REALSetPropValue
-	#define REALSetPropValueInt8 REALSetPropValue
-	#define REALSetPropValueSingle REALSetPropValue
-	#define REALSetPropValueCString REALSetPropValue
-	#define REALSetPropValueWString REALSetPropValue
-	#define REALSetPropValuePString REALSetPropValue
-#if TARGET_CARBON || TARGET_COCOA
-	#define REALSetPropValueCFStringRef REALSetPropValue
-#endif
-
-	#define REALInsertArrayValueInt64 REALInsertArrayValue
-	#define REALInsertArrayValueInt32 REALInsertArrayValue
-	#define REALInsertArrayValueInt16 REALInsertArrayValue
-	#define REALInsertArrayValueInt8 REALInsertArrayValue
-	#define REALInsertArrayValueUInt64 REALInsertArrayValue
-	#define REALInsertArrayValueUInt32 REALInsertArrayValue
-	#define REALInsertArrayValueUInt16 REALInsertArrayValue
-	#define REALInsertArrayValueUInt8 REALInsertArrayValue
-	#define REALInsertArrayValueString REALInsertArrayValue
-	#define REALInsertArrayValueObject REALInsertArrayValue
-	#define REALInsertArrayValueSingle REALInsertArrayValue
-	#define REALInsertArrayValueDouble REALInsertArrayValue
-	#define REALInsertArrayValueBoolean REALInsertArrayValue
-
-	#define REALGetArrayValueInt64 REALGetArrayValue
-	#define REALGetArrayValueInt32 REALGetArrayValue
-	#define REALGetArrayValueInt16 REALGetArrayValue
-	#define REALGetArrayValueInt8 REALGetArrayValue
-	#define REALGetArrayValueUInt64 REALGetArrayValue
-	#define REALGetArrayValueUInt32 REALGetArrayValue
-	#define REALGetArrayValueUInt16 REALGetArrayValue
-	#define REALGetArrayValueUInt8 REALGetArrayValue
-	#define REALGetArrayValueString REALGetArrayValue
-	#define REALGetArrayValueObject REALGetArrayValue
-	#define REALGetArrayValueSingle REALGetArrayValue
-	#define REALGetArrayValueDouble REALGetArrayValue
-	#define REALGetArrayValueBoolean REALGetArrayValue
-
-	#define REALSetArrayValueInt64 REALSetArrayValue
-	#define REALSetArrayValueInt32 REALSetArrayValue
-	#define REALSetArrayValueInt16 REALSetArrayValue
-	#define REALSetArrayValueInt8 REALSetArrayValue
-	#define REALSetArrayValueUInt64 REALSetArrayValue
-	#define REALSetArrayValueUInt32 REALSetArrayValue
-	#define REALSetArrayValueUInt16 REALSetArrayValue
-	#define REALSetArrayValueUInt8 REALSetArrayValue
-	#define REALSetArrayValueString REALSetArrayValue
-	#define REALSetArrayValueObject REALSetArrayValue
-	#define REALSetArrayValueSingle REALSetArrayValue
-	#define REALSetArrayValueDouble REALSetArrayValue
-	#define REALSetArrayValueBoolean REALSetArrayValue
-
-	#define REALLockPictureDescriptionWithNativeType	REALLockPictureDescription
-	#define REALBuildStringWithEncoding	REALBuildString
-#endif
-
 #ifdef WIN32
 extern "C" void __declspec(dllexport) REALPluginMain(void *(*resolver)(const char *entryName));
+#elif defined(__GNUC__)
+extern "C" __attribute__((visibility("default"))) void REALPluginMain(void *(*resolver)(const char *entryName));
 #else
 extern "C" void REALPluginMain(void *(*resolver)(const char *entryName));
 #endif
 
+extern void *(*gResolver)(const char *entryName);
 void *(*gResolver)(const char *entryName);
 
 inline void* CallResolver(const char *entryName)
@@ -116,56 +27,15 @@ inline void* CallResolver(const char *entryName)
 	return gResolver(entryName);
 }
 
-Boolean REALGetStringData( REALstring str, unsigned long encoding, REALstringData *outData )
+bool REALGetStringData( REALstring str, uint32_t encoding, REALstringData *outData )
 {
-	static Boolean (*pGetStringData)(REALstring, unsigned long, REALstringData*);
+	static RBBoolean (*pGetStringData)(REALstring, uint32_t, REALstringData*);
 	if (!pGetStringData)
-		pGetStringData = (Boolean (*)(REALstring, unsigned long, REALstringData*)) CallResolver("PluginGetStringData");
+		pGetStringData = (RBBoolean(*)(REALstring, uint32_t, REALstringData*)) CallResolver("PluginGetStringData");
 	if (pGetStringData) {
 		return pGetStringData(str, encoding, outData);
-	} else {
-		static unsigned long (*pCString)(REALstring) = nil;
-		static RBInteger (*pLenB)(REALstring);
-		if (!pCString)
-			pCString = (unsigned long (*)(REALstring)) CallResolver("StringGetCString");
-		if (!pLenB)
-			pLenB = (RBInteger (*)(REALstring))REALLoadFrameworkMethod( "LenB( s as string ) as integer" );
-		if (!pCString || !pLenB) return false;
-		
-		// Empty strings return false.
-		if (!str) return false;
-		
-		// We don't have an implementation of this in the framework, but let's
-		// emulate it so that we can run on 2011r4. The 2012r1+ implementation is
-		// more optimized than this, don't worry.
-		unsigned long length;
-		char *data;
-		if (encoding == kREALTextEncodingUnknown) {
-			length = pLenB( str );
-			data = (char *)malloc( outData->length + 4 );
-			memcpy( data, (void *)pCString( str ), length );
-			memset( data + length, 0, 4 );
-		} else if (encoding == REALGetStringEncoding( str )) {
-			length = pLenB( str );
-			data = (char *)malloc( length + 4 );
-			memcpy( data, (void *)pCString( str ), length );
-			memset( data + length, 0, 4 );
-		} else {
-			REALstring converted = REALConvertString( str, encoding );
-			if (!converted) return false;
-			
-			length = pLenB( converted );
-			data = (char *)malloc( length + 4 );
-			memcpy( data, (void *)pCString( converted ), length );
-			memset( data + length, 0, 4 );
-			REALUnlockString( converted );
-		}
-		
-		outData->encoding = encoding;
-		outData->length = length;
-		outData->data = data;
-		return true;
 	}
+	return false;
 }
 
 void REALDisposeStringData( REALstringData *data )
@@ -175,18 +45,15 @@ void REALDisposeStringData( REALstringData *data )
 		pDisposeStringData = (void (*)(REALstringData*)) CallResolver("PluginDisposeStringData");
 	if (pDisposeStringData) {
 		pDisposeStringData(data);
-	} else {
-		// Again, emulate this so we can run on 2011r4.
-		free( (void *)data->data );
 	}
 }
 
 #if TARGET_CARBON || TARGET_COCOA
 CFStringRef REALCopyStringCFString( REALstring str )
 {
-	static CFStringRef (*pGetStringCFString)(REALstring, Boolean) = nil;
+	static CFStringRef (*pGetStringCFString)(REALstring, RBBoolean) = nil;
 	if (!pGetStringCFString)
-		pGetStringCFString = (CFStringRef (*)(REALstring, Boolean)) CallResolver("REALGetStringCFString");
+		pGetStringCFString = (CFStringRef (*)(REALstring, RBBoolean)) CallResolver("REALGetStringCFString");
 	if (pGetStringCFString) return pGetStringCFString(str, false);
 	else return (CFStringRef)0;
 }
@@ -201,11 +68,11 @@ void * REALGetPluginData( REALobject obj, REALclassRef classRef )
 	else return NULL;
 }
 
-Boolean REALObjectIsA( REALobject obj, REALclassRef classRef )
+bool REALObjectIsA( REALobject obj, REALclassRef classRef )
 {
-	static Boolean (*pObjectIsA)(REALobject, REALclassRef);
+	static RBBoolean (*pObjectIsA)(REALobject, REALclassRef);
 	if (!pObjectIsA)
-		pObjectIsA = (Boolean (*)(REALobject, REALclassRef)) CallResolver("RuntimeObjectIsa");
+		pObjectIsA = (RBBoolean (*)(REALobject, REALclassRef)) CallResolver("RuntimeObjectIsa");
 	if (pObjectIsA) return pObjectIsA(obj, classRef);
 	else return (Boolean)0;
 }
@@ -249,6 +116,17 @@ void * REALGetDelegateInvoker( REALobject delegate )
 	else return NULL;
 }
 
+uint32_t REALGetSystemTextEncoding(void)
+{
+	static uint32_t (*pGetSystemTextEncoding)() = nil;
+	if (!pGetSystemTextEncoding)
+		pGetSystemTextEncoding = (uint32_t(*)()) CallResolver("REALGetSystemTextEncoding");
+	if (pGetSystemTextEncoding)
+		return pGetSystemTextEncoding();
+	else
+		return kREALTextEncodingUTF8;
+}
+
 void SetClassConsoleSafe( REALclassDefinition *def )	// Nov 04 2004 -- AJB (1)
 {
 	def->mFlags |= REALconsoleSafe;
@@ -259,29 +137,29 @@ void SetClassWebOnly( REALclassDefinition *def )	// Nov 04 2004 -- AJB (1)
 	def->mFlags = (def->mFlags | REALwebOnly) & ~REALconsoleOnly;
 }
 
-Boolean REALinRuntime(void)
+bool REALinRuntime(void)
 {
-	static Boolean (*pInRuntime)(void) = nil;
+	static RBBoolean (*pInRuntime)(void) = nil;
 	if (!pInRuntime)
-		pInRuntime = (Boolean (*)(void)) CallResolver("REALinRuntime");
+		pInRuntime = (RBBoolean (*)(void)) CallResolver("REALinRuntime");
 	if (pInRuntime) return pInRuntime();
-	else return (Boolean)0;
+	else return false;
 }
 
-long REALRegisterBackgroundTask( BackgroundTaskProc proc, unsigned long period, void *data )
+int32_t REALRegisterBackgroundTask( BackgroundTaskProc proc, uint32_t period, void *data )
 {
-	static long (*pRuntimeRegisterBackgroundTask)( BackgroundTaskProc, unsigned long, void * );
+	static int32_t(*pRuntimeRegisterBackgroundTask)(BackgroundTaskProc, uint32_t, void *);
 	if (!pRuntimeRegisterBackgroundTask)
-		pRuntimeRegisterBackgroundTask = (long (*)( BackgroundTaskProc, unsigned long, void * )) CallResolver("PluginRegisterBackgroundTask");
+		pRuntimeRegisterBackgroundTask = (int32_t(*)(BackgroundTaskProc, uint32_t, void *)) CallResolver("PluginRegisterBackgroundTask");
 	if (pRuntimeRegisterBackgroundTask) return pRuntimeRegisterBackgroundTask( proc, period, data );
 	return -1;
 }
 
-void REALUnregisterBackgroundTask( long id )
+void REALUnregisterBackgroundTask( int32_t id )
 {
-	static void (*pRuntimeUnregisterBackgroundTask)( long id );
+	static void(*pRuntimeUnregisterBackgroundTask)(int32_t id);
 	if (!pRuntimeUnregisterBackgroundTask)
-		pRuntimeUnregisterBackgroundTask = (void (*)(long)) CallResolver("PluginUnregisterBackgroundTask");
+		pRuntimeUnregisterBackgroundTask = (void(*)(int32_t)) CallResolver("PluginUnregisterBackgroundTask");
 	if (pRuntimeUnregisterBackgroundTask) pRuntimeUnregisterBackgroundTask( id );
 }
 
@@ -292,6 +170,15 @@ void REALRegisterControl(REALcontrol *defn)
 		pRuntimeRegisterControl = (void (*)(REALcontrol *)) CallResolver("PluginRegisterControl");
 	
 	if (pRuntimeRegisterControl) pRuntimeRegisterControl(defn);
+}
+
+void REALRegisterMobileControl(REALmobileControl *defn)
+{
+    static void (*pRuntimeRegisterControl)(REALmobileControl *defn);
+    if (!pRuntimeRegisterControl)
+        pRuntimeRegisterControl = (void (*)(REALmobileControl *)) CallResolver("PluginRegisterMobileControl");
+    
+    if (pRuntimeRegisterControl) pRuntimeRegisterControl(defn);
 }
 
 void REALRegisterDBEngine(REALdbEngineDefinition *defn)
@@ -335,48 +222,53 @@ void REALRegisterClass(REALclassDefinition *defn)
 
 REALstring REALDefaultControlFont(void)
 {
-	static unsigned long (*pDefaultControlFont)(void) = nil;
+	static REALstring (*pDefaultControlFont)(void) = nil;
 	if (!pDefaultControlFont)
-		pDefaultControlFont = (unsigned long (*)(void)) CallResolver("PluginDefaultControlFont");
-	if (pDefaultControlFont) return (REALstring)pDefaultControlFont();
-	else return (REALstring)0;
+		pDefaultControlFont = (REALstring(*)(void)) CallResolver("PluginDefaultControlFont");
+	if (pDefaultControlFont) return pDefaultControlFont();
+	else return 0;
 }
 
-unsigned long REALDefaultControlFontSize(void)
+uint32_t REALDefaultControlFontSize(void)
 {
-	static unsigned long (*pDefaultControlFontSize)(void) = nil;
+	static uint32_t(*pDefaultControlFontSize)(void) = nil;
 	if (!pDefaultControlFontSize)
-		pDefaultControlFontSize = (unsigned long (*)(void)) CallResolver("PluginDefaultControlFontSize");
+		pDefaultControlFontSize = (uint32_t(*)(void)) CallResolver("PluginDefaultControlFontSize");
 	if (pDefaultControlFontSize) return pDefaultControlFontSize();
-	else return (unsigned long)0;
+	else return 0;
 }
 
 REALstring REALBuildString(const char *contents, int length)
 {
-	static unsigned long (*pBuildString)(const char *, int) = nil;
+	static REALstring (*pBuildString)(const char *, int) = nil;
 	if (!pBuildString)
-		pBuildString = (unsigned long (*)(const char *, int)) CallResolver("REALBuildString");
-	if (pBuildString) return (REALstring)pBuildString(contents, length);
-	else return (REALstring)0;
+		pBuildString = (REALstring(*)(const char *, int)) CallResolver("REALBuildString");
+	if (pBuildString) return pBuildString(contents, length);
+	else return 0;
 }
 
-REALstring REALBuildStringWithEncoding( const char *contents, int byteCount, unsigned long encoding )
+REALstring REALBuildStringWithEncoding( const char *contents, int byteCount, uint32_t encoding )
 {
-	static unsigned long (*pBuildString)(const char *, int, unsigned long) = nil;
+	static REALstring (*pBuildString)(const char *, int, uint32_t) = nil;
 	if (!pBuildString)
-		pBuildString = (unsigned long (*)(const char *, int, unsigned long)) CallResolver("REALBuildStringWithEncoding");
-	if (pBuildString) return (REALstring)pBuildString(contents, byteCount, encoding);
-	else return (REALstring)0;
+		pBuildString = (REALstring(*)(const char *, int, uint32_t)) CallResolver("REALBuildStringWithEncoding");
+	if (pBuildString) return pBuildString(contents, byteCount, encoding);
+	else return 0;
+}
+
+REALstring REALBuildString( const char *contents, int byteCount, uint32_t encoding )
+{
+	return REALBuildStringWithEncoding(contents, byteCount, encoding);
 }
 
 void *REALGetStringContents( REALstring str, size_t *numBytes )
 {
 	if (!str) return NULL;
 
-	static unsigned long (*pCString)(REALstring) = nil;
+	static void *(*pCString)(REALstring) = nil;
 	static RBInteger (*pLenB)(REALstring);
 	if (!pCString)
-		pCString = (unsigned long (*)(REALstring)) CallResolver("StringGetCString");
+		pCString = (void *(*)(REALstring)) CallResolver("StringGetCString");
 	if (!pLenB)
 		pLenB = (RBInteger (*)(REALstring))REALLoadFrameworkMethod( "LenB( s as string ) as integer" );
 	
@@ -384,7 +276,7 @@ void *REALGetStringContents( REALstring str, size_t *numBytes )
 		*numBytes = pLenB(str);
 	}
 	
-	if (pCString) return (void *)pCString(str);
+	if (pCString) return pCString(str);
 
 	return NULL;
 }
@@ -421,33 +313,98 @@ void REALUnlockString(REALstring str)
 	if (pUnlockString) pUnlockString(str);
 }
 
-#if TARGET_CARBON && !TARGET_COCOA
-REALpicture REALBuildPictureFromPicHandle(PicHandle pic, Boolean bPassOwnership)
+void REALLockText(REALtext value)
 {
-	static unsigned long (*pBuildPictureFromPicHandle)(PicHandle, Boolean) = nil;
-	if (!pBuildPictureFromPicHandle)
-		pBuildPictureFromPicHandle = (unsigned long (*)(PicHandle, Boolean)) CallResolver("REALBuildPictureFromPicHandle");
-	if (pBuildPictureFromPicHandle) return (REALpicture)pBuildPictureFromPicHandle(pic, bPassOwnership);
-	else return (REALpicture)0;
+	static void(*pLockText)(REALtext) = NULL;
+	if (!pLockText) pLockText = (void(*)(REALtext)) CallResolver("PluginLockText");
+	if (pLockText) pLockText(value);
+}
+
+void REALUnlockText(REALtext value)
+{
+	static void(*pUnlockText)(REALtext) = NULL;
+	if (!pUnlockText) pUnlockText = (void(*)(REALtext)) CallResolver("PluginUnlockText");
+	if (pUnlockText) pUnlockText(value);
+}
+
+REALtext REALBuildText(const void *data,
+	size_t size,
+	const char *encodingName)
+{
+	static REALtext(*pBuildText)(const void *data, size_t, const char *) = NULL;
+	if (!pBuildText) pBuildText = (REALtext (*)(const void *data, size_t, const char *)) CallResolver("PluginBuildText");
+	if (pBuildText) return pBuildText(data, size, encodingName);
+	return NULL;
+}
+
+RBInteger REALCompareText(REALtext value1, REALtext value2, RBInteger options)
+{
+	static RBInteger(*pCompareText)(REALtext, REALtext, RBInteger) = NULL;
+	if (!pCompareText) pCompareText = (RBInteger(*)(REALtext, REALtext, RBInteger)) CallResolver("PluginCompareText");
+	if (pCompareText) return pCompareText(value1, value2, options);
+	return 0;
+}
+
+REALtext REALConcatenateText(REALtext value1, REALtext value2)
+{
+	static REALtext(*pConcatenateText)(REALtext, REALtext) = NULL;
+	if (!pConcatenateText) pConcatenateText = (REALtext(*)(REALtext, REALtext)) CallResolver("PluginConcatenateText");
+	if (pConcatenateText) return pConcatenateText(value1, value2);
+	return NULL;
+}
+
+REALobject REALNewVariantText(REALtext value)
+{
+	static REALobject(*pTextToVariant)(REALtext) = NULL;
+	if (!pTextToVariant) pTextToVariant = (REALobject(*)(REALtext)) CallResolver("PluginNewVariantText");
+	if (pTextToVariant) return pTextToVariant(value);
+	return NULL;
+}
+
+bool REALGetPropValueText(REALobject value,
+	const char *propName,
+	REALtext *result)
+{
+	static RBBoolean(*pGetPropValueText)(REALobject, const char *, REALtext *) = NULL;
+	if (!pGetPropValueText) pGetPropValueText = (RBBoolean(*)(REALobject, const char *, REALtext *)) CallResolver("PluginGetPropValueText");
+	if (pGetPropValueText) return pGetPropValueText(value, propName, result);
+	return false;
+}
+
+REALtextData *REALGetTextData(REALtext value,
+	const char *encodingName,
+	bool allowLossyConversion)
+{
+	static REALtextData *(*pGetTextData)(REALtext, const char *, RBBoolean) = NULL;
+	if (!pGetTextData) pGetTextData = (REALtextData *(*)(REALtext, const char *, RBBoolean)) CallResolver("PluginGetTextData");
+	if (pGetTextData) return pGetTextData(value, encodingName, allowLossyConversion);
+	return NULL;
+}
+
+void REALDisposeTextData(REALtextData *value)
+{
+	static void(*pDisposeTextData)(REALtextData *) = NULL;
+	if (!pDisposeTextData) pDisposeTextData = (void(*)(REALtextData *)) CallResolver("PluginDisposeTextData");
+	if (pDisposeTextData) pDisposeTextData(value);
+}
+
+#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
+CFStringRef REALCopyTextCFString(REALtext value)
+{
+	static CFStringRef(*pCopyTextCFString)(REALtext) = NULL;
+	if (!pCopyTextCFString) pCopyTextCFString = (CFStringRef(*)(REALtext)) CallResolver("PluginCopyTextCFString");
+	if (pCopyTextCFString) return pCopyTextCFString(value);
+	return NULL;
 }
 #endif
 
-REALpicture REALBuildPictureFromGWorld(void *world, Boolean bPassOwnership)
+REALpicture REALBuildPictureFromPictureDescription(REALpictureDescription *description, bool bPassOwnership)
 {
-	static unsigned long (*pBuildPictureFromGWorld)(void *, Boolean) = nil;
-	if (!pBuildPictureFromGWorld)
-		pBuildPictureFromGWorld = (unsigned long (*)(void *, Boolean)) CallResolver("REALBuildPictureFromGWorld");
-	if (pBuildPictureFromGWorld) return (REALpicture)pBuildPictureFromGWorld(world, bPassOwnership);
-	else return (REALpicture)0;
-}
-
-REALpicture REALBuildPictureFromPictureDescription(REALpictureDescription *description, Boolean bPassOwnership)
-{
-	static unsigned long (*pBuildPictureFromPictureDescription)(REALpictureDescription *, Boolean) = nil;
+	static REALpicture (*pBuildPictureFromPictureDescription)(REALpictureDescription *, RBBoolean) = nil;
 	if (!pBuildPictureFromPictureDescription)
-		pBuildPictureFromPictureDescription = (unsigned long (*)(REALpictureDescription *, Boolean)) CallResolver("REALBuildPictureFromPictureDescription");
-	if (pBuildPictureFromPictureDescription) return (REALpicture)pBuildPictureFromPictureDescription(description, bPassOwnership);
-	else return (REALpicture)0;
+		pBuildPictureFromPictureDescription = (REALpicture(*)(REALpictureDescription *, RBBoolean)) CallResolver("REALBuildPictureFromPictureDescription");
+	if (pBuildPictureFromPictureDescription) return pBuildPictureFromPictureDescription(description, bPassOwnership);
+	else return 0;
 }
 
 void REALLockPictureDescriptionWithNativeType(REALpicture pic, REALpictureDescription *description)
@@ -458,6 +415,11 @@ void REALLockPictureDescriptionWithNativeType(REALpicture pic, REALpictureDescri
 	if (pLockPictureDescription) pLockPictureDescription(pic, description);
 }
 
+void REALLockPictureDescription(REALpicture pic, REALpictureDescription *description)
+{
+	REALLockPictureDescriptionWithNativeType(pic, description);
+}
+
 void REALUnlockPictureDescription(REALpicture pic)
 {
 	static void (*pUnlockPictureDescription)(REALpicture) = nil;
@@ -466,28 +428,21 @@ void REALUnlockPictureDescription(REALpicture pic)
 	if (pUnlockPictureDescription) pUnlockPictureDescription(pic);
 }
 
-void REALLockSoundDescription(REALsound sound, REALsoundDescription *description)
-{
-	static void (*pLockSoundDescription)(REALsound, REALsoundDescription *) = nil;
-	if (!pLockSoundDescription)
-		pLockSoundDescription = (void (*)(REALsound, REALsoundDescription *)) CallResolver("");
-	if (pLockSoundDescription) pLockSoundDescription(sound, description);
-}
-
-void REALUnlockSoundDescription(REALsound sound)
-{
-	static void (*pUnlockSoundDescription)(REALsound) = nil;
-	if (!pUnlockSoundDescription)
-		pUnlockSoundDescription = (void (*)(REALsound)) CallResolver("unlockPictureDescription");
-	if (pUnlockSoundDescription) pUnlockSoundDescription(sound);
-}
-
 REALdbCursor REALdbCursorFromDBCursor(dbCursor *cursor, REALdbCursorDefinition *defn)
 {
 	static REALdbCursor (*pDbCursorFromDBCursor)(dbCursor *, REALdbCursorDefinition *) = nil;
 	if (!pDbCursorFromDBCursor)
 		pDbCursorFromDBCursor = (REALdbCursor (*)(dbCursor *, REALdbCursorDefinition *)) CallResolver("REALdbCursorFromDBCursor");
 	if (pDbCursorFromDBCursor) return pDbCursorFromDBCursor(cursor, defn);
+	else return (REALdbCursor)0;
+}
+
+REALdbCursor REALNewRowSetFromDBCursor(dbCursor *cursor, REALdbCursorDefinition *defn)
+{
+	static REALdbCursor(*pNewRowSetFromDBCursor)(dbCursor *, REALdbCursorDefinition *) = nil;
+	if (!pNewRowSetFromDBCursor)
+		pNewRowSetFromDBCursor = (REALdbCursor(*)(dbCursor *, REALdbCursorDefinition *)) CallResolver("NewRowSetFromDBCursor");
+	if (pNewRowSetFromDBCursor) return pNewRowSetFromDBCursor(cursor, defn);
 	else return (REALdbCursor)0;
 }
 
@@ -502,9 +457,9 @@ REALdbDatabase REALdbDatabaseFromDBDatabase(dbDatabase *database, REALdbEngineDe
 
 void *REALGetEventInstance(REALcontrolInstance instance, REALevent *event)
 {
-	static void *(*pGetEventInstance)(REALcontrolInstance instance, int builtHook);
+	static void *(*pGetEventInstance)(REALcontrolInstance instance, RBInteger);
 	if (!pGetEventInstance)
-		pGetEventInstance = (void *(*)(REALcontrolInstance,int)) CallResolver("GetEventInstance");
+		pGetEventInstance = (void *(*)(REALcontrolInstance,RBInteger)) CallResolver("GetEventInstance");
 	if (pGetEventInstance) return (void *) pGetEventInstance(instance, event->forSystemUse);
 
 	return nil;
@@ -512,151 +467,72 @@ void *REALGetEventInstance(REALcontrolInstance instance, REALevent *event)
 
 void *REALGetControlData(REALcontrolInstance instance, REALcontrol *defn)
 {
-	return ((Ptr) instance) + defn->forSystemUse;
+	return ((char *)instance) + defn->forSystemUse;
 }
 
 void *REALGetClassData(REALobject instance, REALclassDefinition *defn)
 {
-	return ((Ptr) instance) + defn->forSystemUse;
+	return ((char *)instance) + defn->forSystemUse;
 }
 
-#if TARGET_CARBON && !TARGET_64BIT
-REALfolderItem REALFolderItemFromFSSpec(const FSSpec *spec)
+void *REALGetMobileControlData(REALcontrolInstance instance, REALmobileControl *defn)
 {
-	static unsigned long (*pFolderItemFromFSSpec)(const FSSpec *) = nil;
-	if (!pFolderItemFromFSSpec)
-		pFolderItemFromFSSpec = (unsigned long (*)(const FSSpec *)) CallResolver("FolderItemFromFSSpec");
-	if (pFolderItemFromFSSpec) return (REALfolderItem)pFolderItemFromFSSpec(spec);
-	else return (REALfolderItem)0;
+	return ((char *)instance) + defn->forSystemUse;
 }
-#endif
 
-#if TARGET_CARBON && !TARGET_64BIT
-Boolean REALFSSpecFromFolderItem(FSSpec *spec, REALfolderItem item)
-{
-	static Boolean (*pFSSpecFromFolderItem)(FSSpec *, REALfolderItem) = nil;
-	if (!pFSSpecFromFolderItem)
-		pFSSpecFromFolderItem = (Boolean (*)(FSSpec *, REALfolderItem)) CallResolver("REALFSSpecFromFolderItem");
-	if (pFSSpecFromFolderItem) return pFSSpecFromFolderItem(spec, item);
-	else return (Boolean)0;
-}
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-void REALSelectGraphics(REALgraphics context)
-{
-	static void (*pSelectGraphics)(REALgraphics) = nil;
-	if (!pSelectGraphics)
-		pSelectGraphics = (void (*)(REALgraphics)) CallResolver("SelectGraphics");
-	if (pSelectGraphics) pSelectGraphics(context);
-}
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-void REALGraphicsDrawOffscreenMacControl(REALgraphics context, ControlHandle mh)
-{
-	static void (*pGraphicsDrawOffscreenMacControl)(REALgraphics, ControlHandle) = nil;
-	if (!pGraphicsDrawOffscreenMacControl)
-		pGraphicsDrawOffscreenMacControl = (void (*)(REALgraphics, ControlHandle)) CallResolver("DrawOffscreenMacControl");
-	if (pGraphicsDrawOffscreenMacControl) pGraphicsDrawOffscreenMacControl(context, mh);
-}
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-REALsound REALBuildSoundFromHandle(Handle sound, Boolean bPassOwnership)
-{
-	static REALsound (*pBuildSoundFromHandle)(Handle, Boolean) = nil;
-	if (!pBuildSoundFromHandle)
-		pBuildSoundFromHandle = (REALsound (*)(Handle, Boolean)) CallResolver("REALBuildSoundFromHandle");
-	if (pBuildSoundFromHandle) return pBuildSoundFromHandle(sound, bPassOwnership);
-	else return (REALsound)0;
-}
-#endif
 
 #if TARGET_CARBON
-REALappleEvent REALBuildAppleEvent(const AppleEvent *event, Boolean bPassOwnership)
+REALappleEvent REALBuildAppleEvent(const AppleEvent *event, bool bPassOwnership)
 {
-	static unsigned long (*pBuildAppleEvent)(const AppleEvent *, Boolean) = nil;
+	static REALappleEvent (*pBuildAppleEvent)(const AppleEvent *, RBBoolean) = nil;
 	if (!pBuildAppleEvent)
-		pBuildAppleEvent = (unsigned long (*)(const AppleEvent *, Boolean)) CallResolver("REALBuildAppleEvent");
-	if (pBuildAppleEvent) return (REALappleEvent)pBuildAppleEvent(event, bPassOwnership);
-	else return (REALappleEvent)0;
+		pBuildAppleEvent = (REALappleEvent (*)(const AppleEvent *, RBBoolean)) CallResolver("REALBuildAppleEvent");
+	if (pBuildAppleEvent) return pBuildAppleEvent(event, bPassOwnership);
+	else return 0;
 }
 #endif
 
 #if TARGET_CARBON
-REALappleEvent REALBuildAEDescList(const AppleEvent *event, Boolean bPassOwnership)
+REALappleEvent REALBuildAEDescList(const AppleEvent *event, bool bPassOwnership)
 {
-	static unsigned long (*pBuildAEDescList)(const AppleEvent *, Boolean) = nil;
+	static REALappleEvent (*pBuildAEDescList)(const AppleEvent *, RBBoolean) = nil;
 	if (!pBuildAEDescList)
-		pBuildAEDescList = (unsigned long (*)(const AppleEvent *, Boolean)) CallResolver("REALBuildAEDescList");
-	if (pBuildAEDescList) return (REALappleEvent)pBuildAEDescList(event, bPassOwnership);
-	else return (REALappleEvent)0;
+		pBuildAEDescList = (REALappleEvent (*)(const AppleEvent *, RBBoolean)) CallResolver("REALBuildAEDescList");
+	if (pBuildAEDescList) return pBuildAEDescList(event, bPassOwnership);
+	else return 0;
 }
 #endif
 
 #if TARGET_CARBON
-REALappleEvent REALBuildAEObjSpecifier(const AppleEvent *event, Boolean bPassOwnership)
+REALappleEvent REALBuildAEObjSpecifier(const AppleEvent *event, bool bPassOwnership)
 {
-	static unsigned long (*pBuildAEObjSpecifier)(const AppleEvent *, Boolean) = nil;
+	static REALappleEvent (*pBuildAEObjSpecifier)(const AppleEvent *, RBBoolean) = nil;
 	if (!pBuildAEObjSpecifier)
-		pBuildAEObjSpecifier = (unsigned long (*)(const AppleEvent *, Boolean)) CallResolver("REALBuildAEObjSpecifier");
-	if (pBuildAEObjSpecifier) return (REALappleEvent)pBuildAEObjSpecifier(event, bPassOwnership);
-	else return (REALappleEvent)0;
+		pBuildAEObjSpecifier = (REALappleEvent (*)(const AppleEvent *, RBBoolean)) CallResolver("REALBuildAEObjSpecifier");
+	if (pBuildAEObjSpecifier) return pBuildAEObjSpecifier(event, bPassOwnership);
+	else return 0;
 }
 #endif
 
 #if TARGET_CARBON
 AppleEvent *REALAccessAppleEvent(REALappleEvent event)
 {
-	static unsigned long (*pAccessAppleEvent)(REALappleEvent) = nil;
+	static AppleEvent *(*pAccessAppleEvent)(REALappleEvent) = nil;
 	if (!pAccessAppleEvent)
-		pAccessAppleEvent = (unsigned long (*)(REALappleEvent)) CallResolver("REALAccessAppleEvent");
-	if (pAccessAppleEvent) return (AppleEvent *)pAccessAppleEvent(event);
-	else return (AppleEvent *)0;
+		pAccessAppleEvent = (AppleEvent *(*)(REALappleEvent)) CallResolver("REALAccessAppleEvent");
+	if (pAccessAppleEvent) return pAccessAppleEvent(event);
+	else return 0;
 }
 #endif
 
 #if TARGET_CARBON
 AppleEvent *REALAccessAppleEventReply(REALappleEvent event)
 {
-	static unsigned long (*pAccessAppleEventReply)(REALappleEvent) = nil;
+	static AppleEvent *(*pAccessAppleEventReply)(REALappleEvent) = nil;
 	if (!pAccessAppleEventReply)
-		pAccessAppleEventReply = (unsigned long (*)(REALappleEvent)) CallResolver("REALAccessAppleEventReply");
-	if (pAccessAppleEventReply) return (AppleEvent *)pAccessAppleEventReply(event);
-	else return (AppleEvent *)0;
-}
-#endif
-
-#if (TARGET_CARBON && !TARGET_COCOA) && !TARGET_64BIT
-REALmovie REALbuildMovie(QT_NAMESPACE Movie movie, int resRefNum, int bNew)
-{
-	static unsigned long (*pBuildMovie)(QT_NAMESPACE Movie, int, int) = nil;
-	if (!pBuildMovie)
-		pBuildMovie = (unsigned long (*)(QT_NAMESPACE Movie, int, int)) CallResolver("buildMovie");
-	if (pBuildMovie) return (REALmovie)pBuildMovie(movie, resRefNum, bNew);
-	else return (REALmovie)0;
-}
-#endif
-
-#if (TARGET_CARBON || TARGET_COCOA) && TARGET_64BIT
-void REALmarkMovieDirty(REALmovie movie)
-{
-	static void (*pMarkMovieDirty)(REALmovie) = nil;
-	if (!pMarkMovieDirty)
-		pMarkMovieDirty = (void (*)(REALmovie)) CallResolver("markMovieDirty");
-	if (pMarkMovieDirty) pMarkMovieDirty(movie);
-}
-#endif
-
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-int REALenterMovies(void)
-{
-	static int (*pEnterMovies)(void) = nil;
-	if (!pEnterMovies)
-		pEnterMovies = (int (*)(void)) CallResolver("REALenterMovies");
-	if (pEnterMovies) return pEnterMovies();
-	else return (int)0;
+		pAccessAppleEventReply = (AppleEvent *(*)(REALappleEvent)) CallResolver("REALAccessAppleEventReply");
+	if (pAccessAppleEventReply) return pAccessAppleEventReply(event);
+	else return 0;
 }
 #endif
 
@@ -689,22 +565,22 @@ void REALRegisterDatabaseConnection(REALDatabaseConnectionDefinition *defn)
 	}
 }
 
-void REALDesignAddDataSource(const char *baseName, const char *szDataSourceName, Ptr data, int dataLen)
+void REALDesignAddDataSource(const char *baseName, const char *szDataSourceName, void *data, int dataLen)
 {
-	static void (*pDesignAddDataSource)(const char *, const char *, Ptr, int) = nil;
+	static void (*pDesignAddDataSource)(const char *, const char *, void *, int) = nil;
 	if (!pDesignAddDataSource)
-		pDesignAddDataSource = (void (*)(const char *, const char *, Ptr, int)) CallResolver("DesignAddDataSource");
+		pDesignAddDataSource = (void (*)(const char *, const char *, void *, int)) CallResolver("DesignAddDataSource");
 	if (pDesignAddDataSource) pDesignAddDataSource(baseName, szDataSourceName, data, dataLen);
 }
 
 #if TARGET_WIN32
-REALpicture REALBuildPictureFromDIB(HANDLE hDIB, Boolean bPassOwnership)
+REALpicture REALBuildPictureFromDIB(HANDLE hDIB, bool bPassOwnership)
 {
-	static unsigned long (*pBuildPictureFromDIB)(HANDLE, Boolean) = nil;
+	static REALpicture (*pBuildPictureFromDIB)(HANDLE, RBBoolean) = nil;
 	if (!pBuildPictureFromDIB)
-		pBuildPictureFromDIB = (unsigned long (*)(HANDLE, Boolean)) CallResolver("REALBuildPictureFromDIB");
-	if (pBuildPictureFromDIB) return (REALpicture)pBuildPictureFromDIB(hDIB, bPassOwnership);
-	else return (REALpicture)0;
+		pBuildPictureFromDIB = (REALpicture (*)(HANDLE, RBBoolean)) CallResolver("REALBuildPictureFromDIB");
+	if (pBuildPictureFromDIB) return pBuildPictureFromDIB(hDIB, bPassOwnership);
+	else return 0;
 }
 #endif
 
@@ -725,30 +601,30 @@ void REALRaiseException(REALobject exception)
 	if (pRaiseException) pRaiseException(exception);
 }
 
-int REALGetArrayUBound(void*array)
+RBInteger REALGetArrayUBound(void*array)
 {
-	static int (*pGetArrayUBound)(void*) = nil;
+	static RBInteger (*pGetArrayUBound)(void*) = nil;
 	if (!pGetArrayUBound)
-		pGetArrayUBound = (int (*)(void*)) CallResolver("RuntimeUBound");
+		pGetArrayUBound = (RBInteger (*)(void*)) CallResolver("RuntimeUBound");
 	if (pGetArrayUBound) return pGetArrayUBound(array);
-	else return (int)0;
+	else return (RBInteger)0;
 }
 
-void REALGetArrayStructure( REALarray array, int index, void *structure )
+void REALGetArrayStructure( REALarray array, RBInteger index, void *structure )
 {
-	static void(*pGetStructureObject)(REALarray, int, void *) = nil;
+	static void(*pGetStructureObject)(REALarray, RBInteger, void *) = nil;
 	if (!pGetStructureObject)
-		pGetStructureObject = (void (*)(REALarray, int, void *)) CallResolver("RuntimeDirectReadStructureArray");
+		pGetStructureObject = (void (*)(REALarray, RBInteger, void *)) CallResolver("RuntimeDirectReadStructureArray");
 	if (pGetStructureObject) pGetStructureObject(array, index, structure);
 }
 
-Boolean REALGetVariantStructure( REALobject variant, void *buffer, unsigned long length )
+bool REALGetVariantStructure( REALobject variant, void *buffer, size_t length )
 {
-	static Boolean(*pGetStructureObject)(REALobject, void *, unsigned long) = nil;
+	static RBBoolean(*pGetStructureObject)(REALobject, void *, size_t) = nil;
 	if (!pGetStructureObject)
-		pGetStructureObject = (Boolean (*)(REALobject, void *, unsigned long)) CallResolver("PluginStructureFromVariant");
+		pGetStructureObject = (RBBoolean(*)(REALobject, void *, size_t)) CallResolver("PluginStructureFromVariant");
 	if (pGetStructureObject) return pGetStructureObject( variant, buffer, length );
-	return (Boolean)0;
+	return false;
 }
 
 void REALYieldToRB(void)
@@ -770,11 +646,28 @@ REALclassRef REALGetClassRef(const char *className)
 
 REALobject REALnewInstanceWithClass(REALclassRef classRef)
 {
-	static unsigned long (*pNewInstance)(REALclassRef) = nil;
+	static REALobject (*pNewInstance)(REALclassRef) = nil;
 	if (!pNewInstance)
-		pNewInstance = (unsigned long (*)(REALclassRef)) CallResolver("CreateInstance");
-	if (pNewInstance and classRef) return (REALobject)pNewInstance(classRef);
-	else return (REALobject)0;
+		pNewInstance = (REALobject (*)(REALclassRef)) CallResolver("CreateInstance");
+	if (pNewInstance and classRef) return pNewInstance(classRef);
+	else return 0;
+}
+
+REALobject REALnewInstance(REALclassRef classRef)
+{
+	return REALnewInstanceWithClass(classRef);
+}
+
+REALobject REALnewInstanceOfClass(REALclassDefinition *classDefn)
+{
+	static REALobject(*pNewInstance)(REALclassDefinition *) = nil;
+	if (!pNewInstance)
+		pNewInstance = (REALobject(*)(REALclassDefinition *)) CallResolver("PluginNewInstanceOfClass");
+
+	if (pNewInstance)
+		return pNewInstance(classDefn);
+
+	return (REALobject)0;
 }
 
 void REALRegisterInterface(REALinterfaceDefinition *defn)
@@ -840,39 +733,6 @@ void REALConstructDBDatabase(REALdbDatabase db, dbDatabase *mydb, REALdbEngineDe
 	if (pConstructDBDatabase) pConstructDBDatabase(db, mydb, engine);
 }
 
-#if TARGET_CARBON || TARGET_COCOA
-Boolean REALFSRefFromFolderItem(REALfolderItem f, FSRef*outRef, HFSUniStr255*outName)
-{
-	static Boolean (*pFSRefFromFolderItem)(REALfolderItem, FSRef*, HFSUniStr255*) = nil;
-	if (!pFSRefFromFolderItem)
-		pFSRefFromFolderItem = (Boolean (*)(REALfolderItem, FSRef*, HFSUniStr255*)) CallResolver("REALFSRefFromFolderItem");
-	if (pFSRefFromFolderItem) return pFSRefFromFolderItem(f, outRef, outName);
-	else return (Boolean)0;
-}
-#endif
-
-#if TARGET_CARBON || TARGET_COCOA
-	#if FLAT_C_PLUGIN_HEADERS
-		REALfolderItem REALFolderItemFromParentFSRef(const FSRef *parent, const HFSUniStr255 *fileName)
-		{
-			static REALfolderItem (*pFolderItemFromParentFSRef)(const FSRef*, const HFSUniStr255*) = nil;
-			if (!pFolderItemFromParentFSRef)
-				pFolderItemFromParentFSRef = (REALfolderItem (*)(const FSRef*, const HFSUniStr255*)) CallResolver("REALFolderItemFromParentFSRef");
-			if (pFolderItemFromParentFSRef) return pFolderItemFromParentFSRef(parent, fileName);
-			else return (REALfolderItem)0;
-		}
-	#else
-		REALfolderItem REALFolderItemFromParentFSRef(const FSRef& parent, const HFSUniStr255& fileName)
-		{
-			static REALfolderItem (*pFolderItemFromParentFSRef)(const FSRef&, const HFSUniStr255&) = nil;
-			if (!pFolderItemFromParentFSRef)
-				pFolderItemFromParentFSRef = (REALfolderItem (*)(const FSRef&, const HFSUniStr255&)) CallResolver("REALFolderItemFromParentFSRef");
-			if (pFolderItemFromParentFSRef) return pFolderItemFromParentFSRef(parent, fileName);
-			else return (REALfolderItem)0;
-		}
-	#endif
-#endif
-
 REALDBConnectionDialogRef REALDBConnectionDialogCreate(void)
 {
 	static REALDBConnectionDialogRef (*pDBConnectionDialogCreate)(void) = nil;
@@ -882,11 +742,11 @@ REALDBConnectionDialogRef REALDBConnectionDialogCreate(void)
 	else return (REALDBConnectionDialogRef)0;
 }
 
-void REALDBConnectionDialogAddField(REALDBConnectionDialogRef dialogRef, REALstring label, REALstring defaultText, Boolean maskField)
+void REALDBConnectionDialogAddField(REALDBConnectionDialogRef dialogRef, REALstring label, REALstring defaultText, bool maskField)
 {
-	static void (*pDBConnectionDialogAddField)(REALDBConnectionDialogRef, REALstring, REALstring, Boolean) = nil;
+	static void (*pDBConnectionDialogAddField)(REALDBConnectionDialogRef, REALstring, REALstring, RBBoolean) = nil;
 	if (!pDBConnectionDialogAddField)
-		pDBConnectionDialogAddField = (void (*)(REALDBConnectionDialogRef, REALstring, REALstring, Boolean)) CallResolver("REALDBConnectionDialogAddField");
+		pDBConnectionDialogAddField = (void (*)(REALDBConnectionDialogRef, REALstring, REALstring, RBBoolean)) CallResolver("REALDBConnectionDialogAddField");
 	if (pDBConnectionDialogAddField) pDBConnectionDialogAddField(dialogRef, label, defaultText, maskField);
 }
 
@@ -908,28 +768,27 @@ void REALDBConnectionDialogDelete(REALDBConnectionDialogRef dialogRef)
 }
 
 #if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-REALpicture REALBuildPictureFromBuffer(long width, long height, RBPixelType pixelType, void*buffer, long rowBytes)
+REALpicture REALBuildPictureFromBuffer(uint32_t width, uint32_t height, RBPixelType pixelType, void*buffer, uint32_t rowBytes)
 {
-	static unsigned long (*pBuildPictureFromBuffer)(long, long, RBPixelType, void*, long) = nil;
+	static REALpicture(*pBuildPictureFromBuffer)(uint32_t, uint32_t, RBPixelType, void*, uint32_t) = nil;
 	if (!pBuildPictureFromBuffer)
-		pBuildPictureFromBuffer = (unsigned long (*)(long, long, RBPixelType, void*, long)) CallResolver("REALBuildPictureFromBuffer");
-	if (pBuildPictureFromBuffer) return (REALpicture)pBuildPictureFromBuffer(width, height, pixelType, buffer, rowBytes);
-	else return (REALpicture)0;
+		pBuildPictureFromBuffer = (REALpicture(*)(uint32_t, uint32_t, RBPixelType, void*, uint32_t)) CallResolver("REALBuildPictureFromBuffer");
+	if (pBuildPictureFromBuffer) return pBuildPictureFromBuffer(width, height, pixelType, buffer, rowBytes);
+	else return 0;
 }
 #endif
 
 #if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-Boolean REALInDebugMode(void)
+bool REALInDebugMode(void)
 {
-	static Boolean (*pInDebugMode)(void) = nil;
+	static RBBoolean (*pInDebugMode)(void) = nil;
 	if (!pInDebugMode)
-		pInDebugMode = (Boolean (*)(void)) CallResolver("REALInDebugMode");
+		pInDebugMode = (RBBoolean (*)(void)) CallResolver("REALInDebugMode");
 	if (pInDebugMode) return pInDebugMode();
-	else return (Boolean)0;
+	else return false;
 }
 #endif
 
-#if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
 void REALStripAmpersands(REALstring*  ioString)
 {
 	static void (*pStripAmpersands)(REALstring* ) = nil;
@@ -937,7 +796,6 @@ void REALStripAmpersands(REALstring*  ioString)
 		pStripAmpersands = (void (*)(REALstring* )) CallResolver("REALStripAmpersands");
 	if (pStripAmpersands) pStripAmpersands(ioString);
 }
-#endif
 
 REALobject REALGetProjectFolder(void)
 {
@@ -975,94 +833,105 @@ void *REALLoadObjectMethod( REALobject object, const char *prototype )
 	else return (void*)0;
 }
 
-Boolean REALGetPropValueInt32(REALobject object, const char *propName, long *outValue)
+void *REALLoadSharedMethod(REALclassRef classRef, const char *prototype)
 {
-	static long (*pGetPropValue)(REALobject, const char *, long *) = nil;
-	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, long *)) CallResolver("REALGetPropValueInt");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	static void *(*pLoadSharedMethod)(REALclassRef, const char *);
+	if (!pLoadSharedMethod)
+		pLoadSharedMethod =
+		    (void *(*)(REALclassRef, const char *))CallResolver("PluginLoadSharedMethod");
+	if (pLoadSharedMethod)
+		return pLoadSharedMethod(classRef, prototype);
+	return NULL;
 }
 
-Boolean REALGetPropValueString(REALobject object, const char *propName, REALstring *outValue)
+bool REALGetPropValueInt32(REALobject object, const char *propName, int32_t *outValue)
+{
+	static long(*pGetPropValue)(REALobject, const char *, int32_t *) = nil;
+	if (!pGetPropValue)
+		pGetPropValue = (long(*)(REALobject, const char *, int32_t *)) CallResolver("REALGetPropValueInt");
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
+}
+
+bool REALGetPropValueString(REALobject object, const char *propName, REALstring *outValue)
 {
 	static long (*pGetPropValue)(REALobject, const char *, REALstring *) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, REALstring *)) CallResolver("REALGetPropValueString");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 
-Boolean REALGetPropValueDouble(REALobject object, const char *propName, double *outValue)
+bool REALGetPropValueDouble(REALobject object, const char *propName, double *outValue)
 {
 	static long (*pGetPropValue)(REALobject, const char *, double *) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, double *)) CallResolver("REALGetPropValueDouble");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 
-Boolean REALGetPropValueObject(REALobject object, const char *propName, REALobject *outValue)
+bool REALGetPropValueObject(REALobject object, const char *propName, REALobject *outValue)
 {
 	static long (*pGetPropValue)(REALobject, const char *, REALobject *) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, REALobject *)) CallResolver("REALGetPropValueObject");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 
-Boolean REALGetPropValuePtr( REALobject object, const char *propName, void **outValue )
+bool REALGetPropValuePtr( REALobject object, const char *propName, void **outValue )
 {
 	static long (*pGetPropValue)(REALobject, const char *, void **) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, void **)) CallResolver("REALGetPropValuePtr");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 
-Boolean REALGetPropValueCString( REALobject object, const char *propName, const char **outValue )
+bool REALGetPropValueCString( REALobject object, const char *propName, const char **outValue )
 {
 	static long (*pGetPropValue)(REALobject, const char *, const char **) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, const char **)) CallResolver("REALGetPropValueCString");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 
-Boolean REALGetPropValueWString( REALobject object, const char *propName, const wchar_t **outValue )
+bool REALGetPropValueWString( REALobject object, const char *propName, const wchar_t **outValue )
 {
 	static long (*pGetPropValue)(REALobject, const char *, const wchar_t **) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, const wchar_t **)) CallResolver("REALGetPropValueWString");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 
-Boolean REALGetPropValuePString( REALobject object, const char *propName, const unsigned char **outValue )
+bool REALGetPropValuePString( REALobject object, const char *propName, const unsigned char **outValue )
 {
 	static long (*pGetPropValue)(REALobject, const char *, const unsigned char **) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, const unsigned char **)) CallResolver("REALGetPropValuePString");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 
 #if TARGET_CARBON || TARGET_COCOA
-Boolean REALGetPropValueCFStringRef( REALobject object, const char *propName, CFStringRef *outValue )
+bool REALGetPropValueCFStringRef( REALobject object, const char *propName, CFStringRef *outValue )
 {
 	static long (*pGetPropValue)(REALobject, const char *, CFStringRef *) = nil;
 	if (!pGetPropValue)
 		pGetPropValue = (long (*)(REALobject, const char *, CFStringRef *)) CallResolver("REALGetPropValueCFStringRef");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, propName, outValue);
-	else return (Boolean)0;
+	if (pGetPropValue) return (bool)pGetPropValue(object, propName, outValue);
+	else return false;
 }
 #endif
 
-void REALSetDBIsConnected(REALdbDatabase database, Boolean connected)
+void REALSetDBIsConnected(REALdbDatabase database, bool connected)
 {
-	static void (*pSetDBIsConnected)(REALdbDatabase, Boolean) = nil;
+	static void (*pSetDBIsConnected)(REALdbDatabase, RBBoolean) = nil;
 	if (!pSetDBIsConnected)
-		pSetDBIsConnected = (void (*)(REALdbDatabase, Boolean)) CallResolver("REALSetDBIsConnected");
+		pSetDBIsConnected = (void (*)(REALdbDatabase, RBBoolean)) CallResolver("REALSetDBIsConnected");
 	if (pSetDBIsConnected) pSetDBIsConnected(database, connected);
 }
 
@@ -1075,11 +944,11 @@ REALobject REALNewVariantString(REALstring value)
 	else return (REALobject)0;
 }
 
-REALobject REALNewVariantStructure( const void *data, unsigned long len )
+REALobject REALNewVariantStructure( const void *data, size_t len )
 {
-	static REALobject (*pNewVariantStructure)( const void *, unsigned long ) = nil;
+	static REALobject(*pNewVariantStructure)(const void *, size_t) = nil;
 	if (!pNewVariantStructure)
-		pNewVariantStructure = (REALobject (*)(const void *, unsigned long)) CallResolver( "PluginStructureToVariant" );
+		pNewVariantStructure = (REALobject(*)(const void *, size_t)) CallResolver("PluginStructureToVariant");
 	if (pNewVariantStructure) return pNewVariantStructure( data, len );
 	else return (REALobject)0;
 }
@@ -1120,11 +989,11 @@ REALobject REALNewVariantPString( const unsigned char *value )
 	else return (REALobject)0;
 }
 
-REALobject REALNewVariantOSType( unsigned long value )
+REALobject REALNewVariantOSType(uint32_t value)
 {
-	static REALobject (*pNewVariant)(unsigned long) = nil;
+	static REALobject(*pNewVariant)(uint32_t) = nil;
 	if (!pNewVariant)
-		pNewVariant = (REALobject (*)(unsigned long)) CallResolver("OSTypeToVariant");
+		pNewVariant = (REALobject(*)(uint32_t)) CallResolver("OSTypeToVariant");
 	if (pNewVariant) return pNewVariant(value);
 	else return (REALobject)0;
 }
@@ -1140,11 +1009,25 @@ REALobject REALNewVariantOSType( unsigned long value )
 	}
 #endif
 
-REALobject REALNewVariantInteger(long value)
+REALobject REALNewVariantInt32(int32_t value)
 {
-	static REALobject (*pNewVariantInteger)(long) = nil;
+	static REALobject(*pNewVariantInteger)(int32_t) = nil;
 	if (!pNewVariantInteger)
-		pNewVariantInteger = (REALobject (*)(long)) CallResolver("Int32ToVariant");
+		pNewVariantInteger = (REALobject(*)(int32_t)) CallResolver("Int32ToVariant");
+	if (pNewVariantInteger) return pNewVariantInteger(value);
+	else return (REALobject)0;
+}
+
+REALobject REALNewVariantInteger(RBInteger value)
+{
+	static REALobject(*pNewVariantInteger)(RBInteger) = nil;
+	if (!pNewVariantInteger)
+		pNewVariantInteger = (REALobject(*)(RBInteger)) CallResolver("IntegerToVariant");
+#if !TARGET_64BIT
+	// Pre-2015r3
+	if (!pNewVariantInteger)
+		pNewVariantInteger = (REALobject(*)(RBInteger)) CallResolver("Int32ToVariant");
+#endif
 	if (pNewVariantInteger) return pNewVariantInteger(value);
 	else return (REALobject)0;
 }
@@ -1158,11 +1041,11 @@ REALobject REALNewVariantDouble(double value)
 	else return (REALobject)0;
 }
 
-REALobject REALNewVariantBoolean(Boolean value)
+REALobject REALNewVariantBoolean(bool value)
 {
-	static REALobject (*pNewVariantBoolean)(Boolean) = nil;
+	static REALobject (*pNewVariantBoolean)(RBBoolean) = nil;
 	if (!pNewVariantBoolean)
-		pNewVariantBoolean = (REALobject (*)(Boolean)) CallResolver("BooleanToVariant");
+		pNewVariantBoolean = (REALobject (*)(RBBoolean)) CallResolver("BooleanToVariant");
 	if (pNewVariantBoolean) return pNewVariantBoolean(value);
 	else return (REALobject)0;
 }
@@ -1176,40 +1059,40 @@ REALobject REALNewVariantColor(RBColor value)
 	else return (REALobject)0;
 }
 
-Boolean REALSetPropValueInt32(REALobject object, const char *propName, long value)
+bool REALSetPropValueInt32(REALobject object, const char *propName, int32_t value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, long) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, int32_t) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, long)) CallResolver("REALSetPropValueInt");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, propName, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, int32_t)) CallResolver("REALSetPropValueInt");
+	if (pSetPropValue) return (bool)pSetPropValue(object, propName, value);
+	else return false;
 }
 
-Boolean REALSetPropValueString(REALobject object, const char *propName, REALstring value)
+bool REALSetPropValueString(REALobject object, const char *propName, REALstring value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, REALstring) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, REALstring) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, REALstring)) CallResolver("REALSetPropValueString");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, propName, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, REALstring)) CallResolver("REALSetPropValueString");
+	if (pSetPropValue) return (bool)pSetPropValue(object, propName, value);
+	else return false;
 }
 
-Boolean REALSetPropValueDouble(REALobject object, const char *propName, double value)
+bool REALSetPropValueDouble(REALobject object, const char *propName, double value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, double) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, double) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, double)) CallResolver("REALSetPropValueDouble");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, propName, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, double)) CallResolver("REALSetPropValueDouble");
+	if (pSetPropValue) return (bool)pSetPropValue(object, propName, value);
+	else return false;
 }
 
-Boolean REALSetPropValueObject(REALobject object, const char *propName, REALobject value)
+bool REALSetPropValueObject(REALobject object, const char *propName, REALobject value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, REALobject) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, REALobject) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, REALobject)) CallResolver("REALSetPropValueObject");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, propName, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, REALobject)) CallResolver("REALSetPropValueObject");
+	if (pSetPropValue) return (bool)pSetPropValue(object, propName, value);
+	else return false;
 }
 
 dbCursor *REALGetCursorFromREALdbCursor(REALdbCursor cursor)
@@ -1221,20 +1104,20 @@ dbCursor *REALGetCursorFromREALdbCursor(REALdbCursor cursor)
 	else return (dbCursor *)0;
 }
 
-Boolean REALLockPictureDescription(REALpicture pic, REALpictureDescription *description, long picType)
+bool REALLockPictureDescription(REALpicture pic, REALpictureDescription *description, uint32_t picType)
 {
-	static Boolean (*pLockPictureDescription)(REALpicture, REALpictureDescription *, long) = nil;
+	static RBBoolean(*pLockPictureDescription)(REALpicture, REALpictureDescription *, uint32_t) = nil;
 	if (!pLockPictureDescription)
-		pLockPictureDescription = (Boolean (*)(REALpicture, REALpictureDescription *, long)) CallResolver("REALLockPictureDescription");
+		pLockPictureDescription = (RBBoolean(*)(REALpicture, REALpictureDescription *, uint32_t)) CallResolver("REALLockPictureDescription");
 	if (pLockPictureDescription) return pLockPictureDescription(pic, description, picType);
-	else return (Boolean)0;
+	else return false;
 }
 
-REALobject REALNewVariantUInt32(unsigned long value)
+REALobject REALNewVariantUInt32(uint32_t value)
 {
-	static REALobject (*pNewVariantUInt32)(unsigned long) = nil;
+	static REALobject(*pNewVariantUInt32)(uint32_t) = nil;
 	if (!pNewVariantUInt32)
-		pNewVariantUInt32 = (REALobject (*)(unsigned long)) CallResolver("UInt32ToVariant");
+		pNewVariantUInt32 = (REALobject(*)(uint32_t)) CallResolver("UInt32ToVariant");
 	if (pNewVariantUInt32) return pNewVariantUInt32(value);
 	else return (REALobject)0;
 }
@@ -1275,649 +1158,1237 @@ REALobject REALNewVariantCurrency(REALcurrency value)
 	else return (REALobject)0;
 }
 
-Boolean REALGetPropValueInt64(REALobject object, const char *name, RBInt64 *value)
+bool REALGetPropValueInt64(REALobject object, const char *name, RBInt64 *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, RBInt64 *) = nil;
+	static RBBoolean (*pGetPropValue)(REALobject, const char *, RBInt64 *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, RBInt64 *)) CallResolver("REALGetPropValueInt64");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, name, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean (*)(REALobject, const char *, RBInt64 *)) CallResolver("REALGetPropValueInt64");
+	if (pGetPropValue) return (bool)pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALGetPropValueUInt64(REALobject object, const char *param, RBUInt64 *value)
+bool REALGetPropValueUInt64(REALobject object, const char *param, RBUInt64 *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, RBUInt64 *) = nil;
+	static RBBoolean (*pGetPropValue)(REALobject, const char *, RBUInt64 *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, RBUInt64 *)) CallResolver("REALGetPropValueUInt64");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, param, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean (*)(REALobject, const char *, RBUInt64 *)) CallResolver("REALGetPropValueUInt64");
+	if (pGetPropValue) return (bool)pGetPropValue(object, param, value);
+	else return false;
 }
 
-Boolean REALGetPropValueUInt32(REALobject object, const char *name, unsigned long *value)
+bool REALGetPropValueUInt32(REALobject object, const char *name, uint32_t *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, unsigned long *) = nil;
+	static RBBoolean (*pGetPropValue)(REALobject, const char *, uint32_t *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, unsigned long *)) CallResolver("REALGetPropValueUInt32");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, name, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean (*)(REALobject, const char *, uint32_t *)) CallResolver("REALGetPropValueUInt32");
+	if (pGetPropValue) return (bool)pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALGetPropValueUInt16(REALobject object, const char *name, unsigned short *value)
+bool REALGetPropValueUInt16(REALobject object, const char *name, uint16_t *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, unsigned short *) = nil;
+	static RBBoolean(*pGetPropValue)(REALobject, const char *, uint16_t *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, unsigned short *)) CallResolver("REALGetPropValueUInt16");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, name, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, uint16_t *)) CallResolver("REALGetPropValueUInt16");
+	if (pGetPropValue) return (bool)pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALGetPropValueInt16(REALobject object, const char *name, short *value)
+bool REALGetPropValueInt16(REALobject object, const char *name, int16_t *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, short *) = nil;
+	static RBBoolean(*pGetPropValue)(REALobject, const char *, int16_t *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, short *)) CallResolver("REALGetPropValueInt16");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, name, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, int16_t *)) CallResolver("REALGetPropValueInt16");
+	if (pGetPropValue) return (bool)pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALGetPropValueInt8(REALobject object, const char *name, char *value)
+bool REALGetPropValueInt8(REALobject object, const char *name, char *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, char *) = nil;
+	static RBBoolean (*pGetPropValue)(REALobject, const char *, char *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, char *)) CallResolver("REALGetPropValueInt8");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, name, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean (*)(REALobject, const char *, char *)) CallResolver("REALGetPropValueInt8");
+	if (pGetPropValue) return (bool)pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALGetPropValueUInt8(REALobject object, const char *name, unsigned char *value)
+bool REALGetPropValueUInt8(REALobject object, const char *name, unsigned char *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, unsigned char *) = nil;
+	static RBBoolean (*pGetPropValue)(REALobject, const char *, unsigned char *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, unsigned char *)) CallResolver("REALGetPropValueBool");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, name, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean (*)(REALobject, const char *, unsigned char *)) CallResolver("REALGetPropValueUInt8");
+	if (pGetPropValue) return (bool)pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALGetPropValueSingle(REALobject object, const char *name, float *value)
+
+bool REALGetPropValueBoolean(REALobject object, const char *name, bool *value)
 {
-	static long (*pGetPropValue)(REALobject, const char *, float *) = nil;
+	static RBBoolean (*pGetPropValue)(REALobject, const char *, RBBoolean *) = nil;
 	if (!pGetPropValue)
-		pGetPropValue = (long (*)(REALobject, const char *, float *)) CallResolver("REALGetPropValueSingle");
-	if (pGetPropValue) return (Boolean)pGetPropValue(object, name, value);
-	else return (Boolean)0;
+		pGetPropValue = (RBBoolean (*)(REALobject, const char *, RBBoolean *)) CallResolver("REALGetPropValueBool");
+
+	if (pGetPropValue) {
+		RBBoolean retValue;
+		bool result = (bool)pGetPropValue(object, name, &retValue);
+		*value = retValue;
+		return result;
+	}
+	
+	return false;
 }
 
-Boolean REALSetPropValueUInt32(REALobject object, const char *name, unsigned long value)
+bool REALGetPropValueSingle(REALobject object, const char *name, float *value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, unsigned long) = nil;
-	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, unsigned long)) CallResolver("REALSetPropValueUInt32");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+	static RBBoolean (*pGetPropValue)(REALobject, const char *, float *) = nil;
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean (*)(REALobject, const char *, float *)) CallResolver("REALGetPropValueSingle");
+	if (pGetPropValue) return (bool)pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueUInt64(REALobject object, const char *name, RBUInt64 value)
+bool REALGetPropValueColor(REALobject object, const char *name, RBColor *value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, RBUInt64) = nil;
-	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, RBUInt64)) CallResolver("REALSetPropValueUInt64");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+	static RBBoolean(*pGetPropValue)(REALobject, const char *, RBColor *) = nil;
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, RBColor *)) CallResolver("REALGetPropValueColor");
+#if !TARGET_64BIT
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, RBColor *)) CallResolver("REALGetPropValueInt");
+#endif
+	if (pGetPropValue) return pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueInt64(REALobject object, const char *name, RBInt64 value)
+bool REALGetPropValueCurrency(REALobject object, const char *name, REALcurrency *value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, RBInt64) = nil;
-	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, RBInt64)) CallResolver("REALSetPropValueInt64");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+	static RBBoolean(*pGetPropValue)(REALobject, const char *, REALcurrency *) = nil;
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, REALcurrency *)) CallResolver("REALGetPropValueCurrency");
+#if !TARGET_64BIT
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, REALcurrency *)) CallResolver("REALGetPropValueInt64");
+#endif
+	if (pGetPropValue) return pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueInt16(REALobject object, const char *name, short value)
+bool REALGetPropValueInteger(REALobject object, const char *name, RBInteger *value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, short) = nil;
-	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, short)) CallResolver("REALSetPropValueInt16");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+	static RBBoolean(*pGetPropValue)(REALobject, const char *, RBInteger *) = nil;
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, RBInteger *)) CallResolver("REALGetPropValueInteger");
+#if !TARGET_64BIT
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, RBInteger *)) CallResolver("REALGetPropValueInt");
+#endif
+	if (pGetPropValue) return pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueUInt16(REALobject object, const char *name, unsigned short value)
+bool REALGetPropValueUInteger(REALobject object, const char *name, RBUInteger *value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, unsigned short) = nil;
-	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, unsigned short)) CallResolver("REALSetPropValueUInt16");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+	static RBBoolean(*pGetPropValue)(REALobject, const char *, RBUInteger *) = nil;
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, RBUInteger *)) CallResolver("REALGetPropValueUInteger");
+#if !TARGET_64BIT
+	if (!pGetPropValue)
+		pGetPropValue = (RBBoolean(*)(REALobject, const char *, RBUInteger *)) CallResolver("REALGetPropValueUInt32");
+#endif
+	if (pGetPropValue) return pGetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueInt8(REALobject object, const char *name, char value)
+bool REALSetPropValueColor(REALobject object, const char *name, RBColor value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, char) = nil;
+	static RBBoolean(*pSetPropValue)(REALobject, const char *, RBColor) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, char)) CallResolver("REALSetPropValueInt8");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, RBColor)) CallResolver("REALSetPropValueColor");
+#if !TARGET_64BIT
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, RBColor)) CallResolver("REALSetPropValueInt");
+#endif
+	if (pSetPropValue) return pSetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueUInt8(REALobject object, const char *name, unsigned char value)
+bool REALSetPropValueCurrency(REALobject object, const char *name, REALcurrency value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, unsigned char) = nil;
+	static RBBoolean(*pSetPropValue)(REALobject, const char *, REALcurrency) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, unsigned char)) CallResolver("REALSetPropValueBoolean");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, REALcurrency)) CallResolver("REALSetPropValueCurrency");
+#if !TARGET_64BIT
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, REALcurrency)) CallResolver("REALSetPropValueInt64");
+#endif
+	if (pSetPropValue) return pSetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueSingle(REALobject object, const char *name, float value)
+bool REALSetPropValueInteger(REALobject object, const char *name, RBInteger value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, float) = nil;
+	static RBBoolean(*pSetPropValue)(REALobject, const char *, RBInteger) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, float)) CallResolver("REALSetPropValueSingle");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, RBInteger)) CallResolver("REALSetPropValueInteger");
+#if !TARGET_64BIT
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, RBInteger)) CallResolver("REALSetPropValueInt");
+#endif
+	if (pSetPropValue) return pSetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValuePtr(REALobject object, const char *name, void *value)
+bool REALSetPropValueUInteger(REALobject object, const char *name, RBUInteger value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, void *) = nil;
+	static RBBoolean(*pSetPropValue)(REALobject, const char *, RBUInteger) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, void *)) CallResolver("REALSetPropValuePtr");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, RBUInteger)) CallResolver("REALSetPropValueUInteger");
+#if !TARGET_64BIT
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, RBUInteger)) CallResolver("REALSetPropValueUInt32");
+#endif
+	if (pSetPropValue) return pSetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueCString(REALobject object, const char *name, const char *value)
+bool REALSetPropValueUInt32(REALobject object, const char *name, uint32_t value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, const char *) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, uint32_t) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, const char *)) CallResolver("REALSetPropValueCString");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, uint32_t)) CallResolver("REALSetPropValueUInt32");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValueWString(REALobject object, const char *name, const wchar_t *value)
+bool REALSetPropValueUInt64(REALobject object, const char *name, RBUInt64 value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, const wchar_t *) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, RBUInt64) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, const wchar_t *)) CallResolver("REALSetPropValueWString");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, RBUInt64)) CallResolver("REALSetPropValueUInt64");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
 }
 
-Boolean REALSetPropValuePString(REALobject object, const char *name, const unsigned char *value)
+bool REALSetPropValueInt64(REALobject object, const char *name, RBInt64 value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, const unsigned char *) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, RBInt64) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, const unsigned char *)) CallResolver("REALSetPropValuePString");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, RBInt64)) CallResolver("REALSetPropValueInt64");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueInt16(REALobject object, const char *name, int16_t value)
+{
+	static RBBoolean(*pSetPropValue)(REALobject, const char *, int16_t) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, int16_t)) CallResolver("REALSetPropValueInt16");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueUInt16(REALobject object, const char *name, uint16_t value)
+{
+	static RBBoolean(*pSetPropValue)(REALobject, const char *, uint16_t) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean(*)(REALobject, const char *, uint16_t)) CallResolver("REALSetPropValueUInt16");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueInt8(REALobject object, const char *name, char value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, char) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, char)) CallResolver("REALSetPropValueInt8");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueUInt8(REALobject object, const char *name, unsigned char value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, unsigned char) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, unsigned char)) CallResolver("REALSetPropValueBoolean");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueBoolean(REALobject object, const char *name, bool value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, RBBoolean) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, RBBoolean)) CallResolver("REALSetPropValueBoolean");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueSingle(REALobject object, const char *name, float value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, float) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, float)) CallResolver("REALSetPropValueSingle");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValuePtr(REALobject object, const char *name, void *value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, void *) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, void *)) CallResolver("REALSetPropValuePtr");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueCString(REALobject object, const char *name, const char *value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, const char *) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, const char *)) CallResolver("REALSetPropValueCString");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValueWString(REALobject object, const char *name, const wchar_t *value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, const wchar_t *) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, const wchar_t *)) CallResolver("REALSetPropValueWString");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
+}
+
+bool REALSetPropValuePString(REALobject object, const char *name, const unsigned char *value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, const unsigned char *) = nil;
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, const unsigned char *)) CallResolver("REALSetPropValuePString");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
 }
 
 #if TARGET_CARBON || TARGET_COCOA
-Boolean REALSetPropValueCFStringRef(REALobject object, const char *name, CFStringRef value)
+bool REALSetPropValueCFStringRef(REALobject object, const char *name, CFStringRef value)
 {
-	static long (*pSetPropValue)(REALobject, const char *, CFStringRef) = nil;
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, CFStringRef) = nil;
 	if (!pSetPropValue)
-		pSetPropValue = (long (*)(REALobject, const char *, CFStringRef)) CallResolver("REALSetPropValueCFStringRef");
-	if (pSetPropValue) return (Boolean)pSetPropValue(object, name, value);
-	else return (Boolean)0;
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, CFStringRef)) CallResolver("REALSetPropValueCFStringRef");
+	if (pSetPropValue) return (bool)pSetPropValue(object, name, value);
+	else return false;
 }
 #endif
 
-void REALInsertArrayValueInt64( REALarray arr, long index, RBInt64 value )
+bool REALSetPropValueText(REALobject object, const char *name, REALtext value)
+{
+	static RBBoolean (*pSetPropValue)(REALobject, const char *, REALtext);
+	if (!pSetPropValue)
+		pSetPropValue = (RBBoolean (*)(REALobject, const char *, REALtext)) CallResolver("PluginSetPropValueText");
+	if (pSetPropValue) return pSetPropValue(object, name, value);
+	else return 0;
+}
+
+void REALInsertArrayValueColor(REALarray arr, RBInteger index, RBColor value)
+{
+	static void *(*pInsertArrayValueProc)(REALarray) = nil;
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginColorArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
+	if (pInsertArrayValueProc)	{
+		void(*fp)(REALarray, RBInteger, RBColor) = (void(*)(REALarray, RBInteger, RBColor))pInsertArrayValueProc(arr);
+		if (fp)	fp(arr, index, value);
+	}
+}
+
+void REALInsertArrayValueInteger(REALarray arr, RBInteger index, RBInteger value)
+{
+	static void *(*pInsertArrayValueProc)(REALarray) = nil;
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginIntegerArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
+	if (pInsertArrayValueProc)	{
+		void(*fp)(REALarray, RBInteger, RBInteger) = (void(*)(REALarray, RBInteger, RBInteger))pInsertArrayValueProc(arr);
+		if (fp)	fp(arr, index, value);
+	}
+}
+
+void REALInsertArrayValueUInteger(REALarray arr, RBInteger index, RBUInteger value)
+{
+	static void *(*pInsertArrayValueProc)(REALarray) = nil;
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUIntegerArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
+	if (pInsertArrayValueProc)	{
+		void(*fp)(REALarray, RBInteger, RBUInteger) = (void(*)(REALarray, RBInteger, RBUInteger))pInsertArrayValueProc(arr);
+		if (fp)	fp(arr, index, value);
+	}
+}
+
+void REALInsertArrayValueBoolean(REALarray arr, RBInteger index, bool value)
+{
+	static void *(*pInsertArrayValueProc)(REALarray) = nil;
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginBooleanArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
+	if (pInsertArrayValueProc)	{
+		void(*fp)(REALarray, RBInteger, RBBoolean) = (void(*)(REALarray, RBInteger, RBBoolean))pInsertArrayValueProc(arr);
+		if (fp)	fp(arr, index, value);
+	}
+}
+
+void REALInsertArrayValueCurrency(REALarray arr, RBInteger index, REALcurrency value)
+{
+	static void *(*pInsertArrayValueProc)(REALarray) = nil;
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginCurrencyArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
+	if (pInsertArrayValueProc)	{
+		void(*fp)(REALarray, RBInteger, REALcurrency) = (void(*)(REALarray, RBInteger, REALcurrency))pInsertArrayValueProc(arr);
+		if (fp)	fp(arr, index, value);
+	}
+}
+
+void REALInsertArrayValueInt64(REALarray arr, RBInteger index, RBInt64 value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "PluginInt64ArrayInsertProc" );
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, RBInt64 ) = (void (*)(REALarray, long, RBInt64))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, RBInt64) = (void(*)(REALarray, RBInteger, RBInt64))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueInt32( REALarray arr, long index, long value )
+void REALInsertArrayValueInt32(REALarray arr, RBInteger index, int32_t value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "PluginInt32ArrayInsertProc" );
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, long ) = (void (*)(REALarray, long, long))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, int32_t) = (void(*)(REALarray, RBInteger, int32_t))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueInt16( REALarray arr, long index, short value )
+void REALInsertArrayValueInt16(REALarray arr, RBInteger index, int16_t value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt16ArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, short ) = (void (*)(REALarray, long, short))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, int16_t) = (void(*)(REALarray, RBInteger, int16_t))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueInt8( REALarray arr, long index, char value )
+void REALInsertArrayValueInt8(REALarray arr, RBInteger index, char value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt8ArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, char ) = (void (*)(REALarray, long, char))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, char) = (void(*)(REALarray, RBInteger, char))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueUInt64( REALarray arr, long index, RBUInt64 value )
+void REALInsertArrayValueUInt64(REALarray arr, RBInteger index, RBUInt64 value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt64ArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, RBUInt64 ) = (void (*)(REALarray, long, RBUInt64))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, RBUInt64) = (void(*)(REALarray, RBInteger, RBUInt64))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueUInt32( REALarray arr, long index, unsigned long value )
+void REALInsertArrayValueUInt32(REALarray arr, RBInteger index, uint32_t value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt32ArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, unsigned long ) = (void (*)(REALarray, long, unsigned long ))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, uint32_t) = (void(*)(REALarray, RBInteger, uint32_t))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueUInt16( REALarray arr, long index, unsigned short value )
+void REALInsertArrayValueUInt16(REALarray arr, RBInteger index, uint16_t value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt16ArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, unsigned short ) = (void (*)(REALarray, long, unsigned short))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, uint16_t) = (void(*)(REALarray, RBInteger, uint16_t))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueUInt8( REALarray arr, long index, unsigned char value )
+void REALInsertArrayValueUInt8(REALarray arr, RBInteger index, unsigned char value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt8ArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, unsigned char ) = (void (*)(REALarray, long, unsigned char))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, unsigned char) = (void(*)(REALarray, RBInteger, unsigned char))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueSingle( REALarray arr, long index, float value )
+void REALInsertArrayValueSingle(REALarray arr, RBInteger index, float value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginSingleArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, float ) = (void (*)(REALarray, long, float))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, float) = (void(*)(REALarray, RBInteger, float))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueDouble( REALarray arr, long index, double value )
+void REALInsertArrayValueDouble(REALarray arr, RBInteger index, double value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginDoubleArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, double ) = (void (*)(REALarray, long, double))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, double) = (void(*)(REALarray, RBInteger, double))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueString( REALarray arr, long index, REALstring value )
+void REALInsertArrayValueString(REALarray arr, RBInteger index, REALstring value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginStringArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, REALstring ) = (void (*)(REALarray, long, REALstring))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, REALstring) = (void(*)(REALarray, RBInteger, REALstring))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALInsertArrayValueObject( REALarray arr, long index, REALobject value )
+void REALInsertArrayValueText(REALarray arr, RBInteger index, REALtext value)
+{
+	static void *(*pInsertArrayValueProc)(REALarray) = nil;
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginTextArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
+	if (pInsertArrayValueProc)	{
+		void(*fp)(REALarray, RBInteger, REALtext) = (void(*)(REALarray, RBInteger, REALtext))pInsertArrayValueProc(arr);
+		if (fp)	fp(arr, index, value);
+	}
+}
+
+void REALInsertArrayValueObject(REALarray arr, RBInteger index, REALobject value)
 {
 	static void *(*pInsertArrayValueProc)( REALarray ) = nil;
 	if (!pInsertArrayValueProc)
-		pInsertArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetInsertProc" );
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginObjectArrayInsertProc");
+#if !TARGET_64BIT
+	if (!pInsertArrayValueProc)
+		pInsertArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetInsertProc");
+#endif
 	if (pInsertArrayValueProc)	{
-		void (*fp)( REALarray, long, REALobject ) = (void (*)(REALarray, long, REALobject))pInsertArrayValueProc( arr );
+		void(*fp)(REALarray, RBInteger, REALobject) = (void(*)(REALarray, RBInteger, REALobject))pInsertArrayValueProc(arr);
 		if (fp)	fp( arr, index, value );
 	}
 }
 
-void REALGetArrayValueInt64( REALarray arr, long index, RBInt64 *value )
+void REALGetArrayValueColor(REALarray arr, RBInteger index, RBColor *value)
+{
+	static void *(*pGetArrayValueProc)(REALarray) = nil;
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginColorArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
+	if (pGetArrayValueProc)	{
+		RBColor(*fp)(REALarray, RBInteger) = (RBColor(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
+		if (fp && value)	*value = fp(arr, index);
+	}
+}
+
+void REALGetArrayValueInteger(REALarray arr, RBInteger index, RBInteger *value)
+{
+	static void *(*pGetArrayValueProc)(REALarray) = nil;
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginIntegerArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
+	if (pGetArrayValueProc)	{
+		RBInteger(*fp)(REALarray, RBInteger) = (RBInteger(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
+		if (fp && value)	*value = fp(arr, index);
+	}
+}
+
+void REALGetArrayValueUInteger(REALarray arr, RBInteger index, RBUInteger *value)
+{
+	static void *(*pGetArrayValueProc)(REALarray) = nil;
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUIntegerArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
+	if (pGetArrayValueProc)	{
+		RBUInteger(*fp)(REALarray, RBInteger) = (RBUInteger(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
+		if (fp && value)	*value = fp(arr, index);
+	}
+}
+
+void REALGetArrayValueBoolean(REALarray arr, RBInteger index, bool *value)
+{
+	static void *(*pGetArrayValueProc)(REALarray) = nil;
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginBooleanArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
+	if (pGetArrayValueProc)	{
+		RBBoolean(*fp)(REALarray, RBInteger) = (RBBoolean(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
+		if (fp && value)	*value = fp(arr, index);
+	}
+}
+
+void REALGetArrayValueCurrency(REALarray arr, RBInteger index, REALcurrency *value)
+{
+	static void *(*pGetArrayValueProc)(REALarray) = nil;
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginCurrencyArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
+	if (pGetArrayValueProc)	{
+		REALcurrency(*fp)(REALarray, RBInteger) = (REALcurrency(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
+		if (fp && value)	*value = fp(arr, index);
+	}
+}
+
+void REALGetArrayValueInt64(REALarray arr, RBInteger index, RBInt64 *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt64ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		RBInt64 (*fp)( REALarray, long ) = (RBInt64 (*)(REALarray, long))pGetArrayValueProc( arr );
+		RBInt64(*fp)(REALarray, RBInteger) = (RBInt64(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueInt32( REALarray arr, long index, long *value )
+void REALGetArrayValueInt32(REALarray arr, RBInteger index, int32_t *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt32ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		long (*fp)( REALarray, long ) = (long (*)(REALarray, long))pGetArrayValueProc( arr );
+		int32_t(*fp)(REALarray, RBInteger) = (int32_t(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueInt16( REALarray arr, long index, short *value )
+void REALGetArrayValueInt16(REALarray arr, RBInteger index, int16_t *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt16ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		short (*fp)( REALarray, long ) = (short (*)(REALarray, long))pGetArrayValueProc( arr );
+		int16_t(*fp)(REALarray, RBInteger) = (int16_t(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueInt8( REALarray arr, long index, char *value )
+void REALGetArrayValueInt8(REALarray arr, RBInteger index, char *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt8ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		char (*fp)( REALarray, long ) = (char (*)(REALarray, long))pGetArrayValueProc( arr );
+		char(*fp)(REALarray, RBInteger) = (char(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueUInt64( REALarray arr, long index, RBUInt64 *value )
+void REALGetArrayValueUInt64(REALarray arr, RBInteger index, RBUInt64 *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt64ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		RBUInt64 (*fp)( REALarray, long ) = (RBUInt64 (*)(REALarray, long))pGetArrayValueProc( arr );
+		RBUInt64(*fp)(REALarray, RBInteger) = (RBUInt64(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueUInt32( REALarray arr, long index, unsigned long *value )
+void REALGetArrayValueUInt32(REALarray arr, RBInteger index, uint32_t *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt32ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		unsigned long (*fp)( REALarray, long ) = (unsigned long (*)(REALarray, long))pGetArrayValueProc( arr );
+		uint32_t(*fp)(REALarray, RBInteger) = (uint32_t(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueUInt16( REALarray arr, long index, unsigned short *value )
+void REALGetArrayValueUInt16(REALarray arr, RBInteger index, uint16_t *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt16ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		unsigned short (*fp)( REALarray, long ) = (unsigned short (*)(REALarray, long))pGetArrayValueProc( arr );
+		uint16_t(*fp)(REALarray, RBInteger) = (uint16_t(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueUInt8( REALarray arr, long index, unsigned char *value )
+void REALGetArrayValueUInt8(REALarray arr, RBInteger index, unsigned char *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt8ArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		unsigned char (*fp)( REALarray, long ) = (unsigned char (*)(REALarray, long))pGetArrayValueProc( arr );
+		unsigned char(*fp)(REALarray, RBInteger) = (unsigned char(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueSingle( REALarray arr, long index, float *value )
+void REALGetArrayValueSingle(REALarray arr, RBInteger index, float *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginSingleArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		float (*fp)( REALarray, long ) = (float (*)(REALarray, long))pGetArrayValueProc( arr );
+		float(*fp)(REALarray, RBInteger) = (float(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueDouble( REALarray arr, long index, double *value )
+void REALGetArrayValueDouble(REALarray arr, RBInteger index, double *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginDoubleArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		double (*fp)( REALarray, long ) = (double (*)(REALarray, long))pGetArrayValueProc( arr );
+		double(*fp)(REALarray, RBInteger) = (double(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueString( REALarray arr, long index, REALstring *value )
+void REALGetArrayValueString(REALarray arr, RBInteger index, REALstring *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginStringArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		REALstring (*fp)( REALarray, long ) = (REALstring (*)(REALarray, long))pGetArrayValueProc( arr );
+		REALstring(*fp)(REALarray, RBInteger) = (REALstring(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALGetArrayValueObject( REALarray arr, long index, REALobject *value )
+void REALGetArrayValueText(REALarray arr, RBInteger index, REALtext *value)
+{
+	static void *(*pGetArrayValueProc)(REALarray) = nil;
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginTextArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
+	if (pGetArrayValueProc)	{
+		REALtext(*fp)(REALarray, RBInteger) = (REALtext(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
+		if (fp && value)	*value = fp(arr, index);
+	}
+}
+
+void REALGetArrayValueObject(REALarray arr, RBInteger index, REALobject *value)
 {
 	static void *(*pGetArrayValueProc)( REALarray ) = nil;
 	if (!pGetArrayValueProc)
-		pGetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetGetProc" );
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginObjectArrayGetProc");
+#if !TARGET_64BIT
+	if (!pGetArrayValueProc)
+		pGetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetGetProc");
+#endif
 	if (pGetArrayValueProc)	{
-		REALobject (*fp)( REALarray, long ) = (REALobject (*)(REALarray, long))pGetArrayValueProc( arr );
+		REALobject(*fp)(REALarray, RBInteger) = (REALobject(*)(REALarray, RBInteger))pGetArrayValueProc(arr);
 		if (fp && value)	*value = fp( arr, index );
 	}
 }
 
-void REALSetArrayValueInt64( REALarray arr, long index, RBInt64 value )
+void REALSetArrayValueColor(REALarray arr, RBInteger index, RBColor value)
+{
+	static void *(*pSetArrayValueProc)(REALarray) = nil;
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginColorArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
+	if (pSetArrayValueProc)	{
+		void(*fp)(REALarray, RBColor, RBInteger) = (void(*)(REALarray, RBColor, RBInteger))pSetArrayValueProc(arr);
+		if (fp)	fp(arr, value, index);
+	}
+}
+
+void REALSetArrayValueInteger(REALarray arr, RBInteger index, RBInteger value)
+{
+	static void *(*pSetArrayValueProc)(REALarray) = nil;
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginIntegerArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
+	if (pSetArrayValueProc)	{
+		void(*fp)(REALarray, RBInteger, RBInteger) = (void(*)(REALarray, RBInteger, RBInteger))pSetArrayValueProc(arr);
+		if (fp)	fp(arr, value, index);
+	}
+}
+
+void REALSetArrayValueUInteger(REALarray arr, RBInteger index, RBUInteger value)
+{
+	static void *(*pSetArrayValueProc)(REALarray) = nil;
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUIntegerArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
+	if (pSetArrayValueProc)	{
+		void(*fp)(REALarray, RBUInteger, RBInteger) = (void(*)(REALarray, RBUInteger, RBInteger))pSetArrayValueProc(arr);
+		if (fp)	fp(arr, value, index);
+	}
+}
+
+void REALSetArrayValueBoolean(REALarray arr, RBInteger index, bool value)
+{
+	static void *(*pSetArrayValueProc)(REALarray) = nil;
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginBooleanArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
+	if (pSetArrayValueProc)	{
+		void(*fp)(REALarray, RBBoolean, RBInteger) = (void(*)(REALarray, RBBoolean, RBInteger))pSetArrayValueProc(arr);
+		if (fp)	fp(arr, value, index);
+	}
+}
+
+void REALSetArrayValueCurrency(REALarray arr, RBInteger index, REALcurrency value)
+{
+	static void *(*pSetArrayValueProc)(REALarray) = nil;
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginCurrencyArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
+	if (pSetArrayValueProc)	{
+		void(*fp)(REALarray, REALcurrency, RBInteger) = (void(*)(REALarray, REALcurrency, RBInteger))pSetArrayValueProc(arr);
+		if (fp)	fp(arr, value, index);
+	}
+}
+
+void REALSetArrayValueInt64(REALarray arr, RBInteger index, RBInt64 value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt64ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, RBInt64, long ) = (void (*)(REALarray, RBInt64, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, RBInt64, RBInteger) = (void(*)(REALarray, RBInt64, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueInt32( REALarray arr, long index, long value )
+void REALSetArrayValueInt32(REALarray arr, RBInteger index, int32_t value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt32ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, long, long ) = (void (*)(REALarray, long, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, int32_t, RBInteger) = (void(*)(REALarray, int32_t, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueInt16( REALarray arr, long index, short value )
+void REALSetArrayValueInt16(REALarray arr, RBInteger index, int16_t value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt16ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, short, long ) = (void (*)(REALarray, short, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, int16_t, RBInteger) = (void(*)(REALarray, int16_t, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueInt8( REALarray arr, long index, char value )
+void REALSetArrayValueInt8(REALarray arr, RBInteger index, char value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginInt8ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, char, long ) = (void (*)(REALarray, char, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, char, RBInteger) = (void(*)(REALarray, char, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueUInt64( REALarray arr, long index, RBUInt64 value )
+void REALSetArrayValueUInt64(REALarray arr, RBInteger index, RBUInt64 value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt64ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, RBUInt64, long ) = (void (*)(REALarray, RBUInt64, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, RBUInt64, RBInteger) = (void(*)(REALarray, RBUInt64, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueUInt32( REALarray arr, long index, unsigned long value )
+void REALSetArrayValueUInt32(REALarray arr, RBInteger index, uint32_t value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt32ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, unsigned long, long ) = (void (*)(REALarray, unsigned long, long ))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, uint32_t, RBInteger) = (void(*)(REALarray, uint32_t, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueUInt16( REALarray arr, long index, unsigned short value )
+void REALSetArrayValueUInt16(REALarray arr, RBInteger index, uint16_t value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt16ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, unsigned short, long ) = (void (*)(REALarray, unsigned short, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, uint16_t, RBInteger) = (void(*)(REALarray, uint16_t, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueUInt8( REALarray arr, long index, unsigned char value )
+void REALSetArrayValueUInt8(REALarray arr, RBInteger index, unsigned char value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginUInt8ArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, unsigned char, long ) = (void (*)(REALarray, unsigned char, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, unsigned char, RBInteger) = (void(*)(REALarray, unsigned char, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueSingle( REALarray arr, long index, float value )
+void REALSetArrayValueSingle(REALarray arr, RBInteger index, float value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginSingleArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
 		void (*fp)( REALarray, float, long ) = (void (*)(REALarray, float, long))pSetArrayValueProc( arr );
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueDouble( REALarray arr, long index, double value )
+void REALSetArrayValueDouble(REALarray arr, RBInteger index, double value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginDoubleArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, double, long ) = (void (*)(REALarray, double, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, double, RBInteger) = (void(*)(REALarray, double, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueString( REALarray arr, long index, REALstring value )
+void REALSetArrayValueString(REALarray arr, RBInteger index, REALstring value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginStringArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, REALstring, long ) = (void (*)(REALarray, REALstring, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, REALstring, RBInteger) = (void(*)(REALarray, REALstring, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-void REALSetArrayValueObject( REALarray arr, long index, REALobject value )
+void REALSetArrayValueText(REALarray arr, RBInteger index, REALtext value)
+{
+	static void *(*pSetArrayValueProc)(REALarray) = nil;
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginTextArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
+	if (pSetArrayValueProc)	{
+		void(*fp)(REALarray, REALtext, RBInteger) = (void(*)(REALarray, REALtext, RBInteger))pSetArrayValueProc(arr);
+		if (fp)	fp(arr, value, index);
+	}
+}
+
+void REALSetArrayValueObject(REALarray arr, RBInteger index, REALobject value)
 {
 	static void *(*pSetArrayValueProc)( REALarray ) = nil;
 	if (!pSetArrayValueProc)
-		pSetArrayValueProc = (void *(*)(REALarray )) CallResolver( "RuntimeArrayDirectGetSetProc" );
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("PluginObjectArraySetProc");
+#if !TARGET_64BIT
+	if (!pSetArrayValueProc)
+		pSetArrayValueProc = (void *(*)(REALarray)) CallResolver("RuntimeArrayDirectGetSetProc");
+#endif
 	if (pSetArrayValueProc)	{
-		void (*fp)( REALarray, REALobject, long ) = (void (*)(REALarray, REALobject, long))pSetArrayValueProc( arr );
+		void(*fp)(REALarray, REALobject, RBInteger) = (void(*)(REALarray, REALobject, RBInteger))pSetArrayValueProc(arr);
 		if (fp)	fp( arr, value, index );
 	}
 }
 
-REALarray REALCreateArray( REALArrayType type, long bounds )
+REALarray REALCreateArray( REALArrayType type, RBInteger bounds )
 {
-	static REALarray (*pCreateArray)( REALArrayType, int ) = nil;
+	static REALarray(*pCreateArray)(REALArrayType, RBInteger) = nil;
 	if (!pCreateArray)
-		pCreateArray = (REALarray (*)( REALArrayType, int )) CallResolver( "RuntimeArrayCreateSingleDimBoundedArray" );
+		pCreateArray = (REALarray(*)(REALArrayType, RBInteger)) CallResolver("RuntimeArrayCreateSingleDimBoundedArray");
 	if (pCreateArray)	return pCreateArray( type, bounds );
 
 	return nil;
 }
 
-unsigned long REALGetStringEncoding(REALstring str)
+uint32_t REALGetStringEncoding(REALstring str)
 {
-	static unsigned long (*pGetStringEncoding)(REALstring) = nil;
+	static uint32_t(*pGetStringEncoding)(REALstring) = nil;
 	if (!pGetStringEncoding)
-		pGetStringEncoding = (unsigned long (*)(REALstring)) CallResolver("REALGetStringEncoding");
+		pGetStringEncoding = (uint32_t(*)(REALstring)) CallResolver("REALGetStringEncoding");
 	if (pGetStringEncoding) return pGetStringEncoding(str);
-	else return (unsigned long)0;
+	else return 0;
 }
 
-REALstring REALConvertString(REALstring str, unsigned long encoding)
+REALstring REALConvertString(REALstring str, uint32_t encoding)
 {
-	static REALstring (*pConvertString)(REALstring, unsigned long) = nil;
+	static REALstring(*pConvertString)(REALstring, uint32_t) = nil;
 	if (!pConvertString)
-		pConvertString = (REALstring (*)(REALstring, unsigned long)) CallResolver("REALConvertString");
+		pConvertString = (REALstring(*)(REALstring, uint32_t)) CallResolver("REALConvertString");
 	if (pConvertString) return pConvertString(str, encoding);
 	else return (REALstring)0;
 }
 
-void REALSetStringEncoding(REALstring str, unsigned long encoding)
+void REALSetStringEncoding(REALstring str, uint32_t encoding)
 {
-	static void (*pSetStringEncoding)(REALstring, unsigned long) = nil;
+	static void(*pSetStringEncoding)(REALstring, uint32_t) = nil;
 	if (!pSetStringEncoding)
-		pSetStringEncoding = (void (*)(REALstring, unsigned long)) CallResolver("REALSetStringEncoding");
+		pSetStringEncoding = (void(*)(REALstring, uint32_t)) CallResolver("REALSetStringEncoding");
 	if (pSetStringEncoding) pSetStringEncoding(str, encoding);
 }
 
-unsigned long REALstringToOSType(REALstring id)
+uint32_t REALstringToOSType(REALstring id)
 {
-	static unsigned long (*fpStringToOSType)( REALstring ) = nil;
+	static uint32_t(*fpStringToOSType)(REALstring) = nil;
 	if (!fpStringToOSType)
-		fpStringToOSType = (unsigned long (*)( REALstring ))CallResolver( "StringToOSType" );
+		fpStringToOSType = (uint32_t (*)( REALstring ))CallResolver( "StringToOSType" );
 	if (fpStringToOSType) return fpStringToOSType( id );
 	return 0L;
 }
 
-inline unsigned long REALWin32CodePageToEncoding( unsigned long codePage )
+inline uint32_t REALWin32CodePageToEncoding(uint32_t codePage)
 {
 	return 0xFFFF0000 | codePage;
 }
+
+void REALGetGraphicsOrigin(REALgraphics context, int32_t *originX, int32_t *originY)
+{
+	static void(*pGetGraphicsOrigin)(REALgraphics, int32_t *, int32_t *) = nil;
+	if (!pGetGraphicsOrigin)
+		pGetGraphicsOrigin = (void(*)(REALgraphics, int32_t *, int32_t *)) CallResolver("REALGetGraphicsOrigin");
+	if (pGetGraphicsOrigin) pGetGraphicsOrigin(context, originX, originY);
+}
+
+void REALSetGraphicsOrigin(REALgraphics context, int32_t originX, int32_t originY)
+{
+	static void(*pSetGraphicsOrigin)(REALgraphics, int32_t, int32_t) = nil;
+	if (!pSetGraphicsOrigin)
+		pSetGraphicsOrigin = (void(*)(REALgraphics, int32_t, int32_t)) CallResolver("REALSetGraphicsOrigin");
+	if (pSetGraphicsOrigin) pSetGraphicsOrigin(context, originX, originY);
+}
+
+#if TARGET_WIN32 || X_WINDOW
+void REALSetAccelerator(REALcontrolInstance instance, REALstring key)
+{
+	static void(*pSetAccelerator)(REALcontrolInstance, REALstring) = nil;
+	if (!pSetAccelerator)
+		pSetAccelerator = (void(*)(REALcontrolInstance, REALstring)) CallResolver("REALSetAccelerator");
+	if (pSetAccelerator) pSetAccelerator(instance, key);
+}
+#endif
+
+REALgraphics REALGetControlGraphics(REALcontrolInstance instance)
+{
+	static REALgraphics(*pGetControlGraphics)(REALcontrolInstance) = nil;
+	if (!pGetControlGraphics)
+		pGetControlGraphics = (REALgraphics(*)(REALcontrolInstance)) CallResolver("REALGetControlGraphics");
+	if (pGetControlGraphics) return pGetControlGraphics(instance);
+	else return 0;
+}
+
 
 // Main program
 void REALPluginMain(void *(*resolver)(const char *entryName))
 {
 	void (*pRegisterPluginVersion)(int version);
 	
-	assert( !gResolver && "Plugin loaded twice?" );
 	gResolver = resolver;
 
 	pRegisterPluginVersion = (void (*)(int)) CallResolver("RegisterPluginVersion");
@@ -1933,45 +2404,28 @@ void REALPluginMain(void *(*resolver)(const char *entryName))
 	#pragma warning( disable:4995 )
 #endif
 
-#if !FLAT_C_PLUGIN_HEADERS
-	#define REALGetControlGraphicsWithDC REALGetControlGraphics
-#endif
-
-void *REALLoadGlobalMethod( const char *module, const char *prototype )
+void *REALLoadGlobalMethod( const char *, const char *prototype )
 {
 	// Call through to the real worker function
 	return REALLoadFrameworkMethod( prototype );
 }
 
-REALstring REALInterpretConstantValue(REALstring value)
-{
-	static REALstring (*pInterpretConstantValue)(REALstring);
-	if (!pInterpretConstantValue)
-		pInterpretConstantValue = (REALstring (*)(REALstring)) CallResolver("PluginInterpretConstantValue");
-	if (!pInterpretConstantValue)
-	{
-		REALLockString(value);
-		return value;
-	}
-	return pInterpretConstantValue(value);
-}
-
 REALstring REALDefaultControlCaption(void)
 {
-	static unsigned long (*pDefaultControlCaption)(void) = nil;
+	static REALstring (*pDefaultControlCaption)(void) = nil;
 	if (!pDefaultControlCaption)
-		pDefaultControlCaption = (unsigned long (*)(void)) CallResolver("PluginDefaultControlCaption");
-	if (pDefaultControlCaption) return (REALstring)pDefaultControlCaption();
-	else return (REALstring)0;
+		pDefaultControlCaption = (REALstring (*)(void)) CallResolver("PluginDefaultControlCaption");
+	if (pDefaultControlCaption) return pDefaultControlCaption();
+	else return 0;
 }
 
 REALobject REALnewInstance(const char *className)
 {
-	static unsigned long (*pNewInstance)(const char *) = nil;
+	static REALobject (*pNewInstance)(const char *) = nil;
 	if (!pNewInstance)
-		pNewInstance = (unsigned long (*)(const char *)) CallResolver("PluginNewInstance");
-	if (pNewInstance) return (REALobject)pNewInstance(className);
-	else return (REALobject)0;
+		pNewInstance = (REALobject(*)(const char *)) CallResolver("PluginNewInstance");
+	if (pNewInstance) return pNewInstance(className);
+	else return 0;
 }
 
 void REALRegisterStructure(REALstructure *defn)
@@ -1990,33 +2444,19 @@ void REALRegisterEnum(REALenum *defn)
 	if (pRuntimeRegisterMethod) pRuntimeRegisterMethod(defn);
 }
 
-#if TARGET_CARBON && !TARGET_COCOA
-int REALallocateMenuID(void)
+void GraphicsDrawLine(REALgraphics graphicsObject, double x1, double y1, double x2, double y2)
 {
-	static int (*pAllocateMenuID)(void) = nil;
-	if (!pAllocateMenuID)
-		pAllocateMenuID = (int (*)(void)) CallResolver("allocateMenuID");
-	if (pAllocateMenuID) return pAllocateMenuID();
-	else return (int)0;
-}
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-void REALreleaseMenuID(int id)
-{
-	static void (*pReleaseMenuID)(int) = nil;
-	if (!pReleaseMenuID)
-		pReleaseMenuID = (void (*)(int)) CallResolver("releaseMenuID");
-	if (pReleaseMenuID) pReleaseMenuID(id);
-}
-#endif
-
-void GraphicsDrawLine(REALgraphics graphicsObject, int x1, int y1, int x2, int y2)
-{
-	static void (*pGraphicsDrawLine)(REALgraphics, int, int, int, int) = nil;
-	if (!pGraphicsDrawLine)
-		pGraphicsDrawLine = (void (*)(REALgraphics, int, int, int, int)) CallResolver("RuntimeGraphicsDrawLine");
-	if (pGraphicsDrawLine) pGraphicsDrawLine(graphicsObject, x1, y1, x2, y2);
+	if (REALGetRBVersion() < 2018.02) {
+		static void(*pGraphicsDrawLine)(REALgraphics, RBInteger, RBInteger, RBInteger, RBInteger) = nil;
+		if (!pGraphicsDrawLine)
+			pGraphicsDrawLine = (void(*)(REALgraphics, RBInteger, RBInteger, RBInteger, RBInteger)) CallResolver("RuntimeGraphicsDrawLine");
+		if (pGraphicsDrawLine) pGraphicsDrawLine(graphicsObject, x1, y1, x2, y2);
+	} else {
+		static void(*pGraphicsDrawLine)(REALgraphics, double, double, double, double) = nil;
+		if (!pGraphicsDrawLine)
+			pGraphicsDrawLine = (void(*)(REALgraphics, double, double, double, double)) CallResolver("RuntimeGraphicsDrawLine");
+		if (pGraphicsDrawLine) pGraphicsDrawLine(graphicsObject, x1, y1, x2, y2);
+	}
 }
 
 void REALRegisterMethod(REALmethodDefinition *defn)
@@ -2039,29 +2479,41 @@ void REALRegisterClassExtension(REALclassDefinition *defn)
 
 const char *REALCString(REALstring str)
 {
-	static unsigned long (*pCString)(REALstring) = nil;
+	static char *(*pCString)(REALstring) = nil;
 	if (!pCString)
-		pCString = (unsigned long (*)(REALstring)) CallResolver("StringGetCString");
+		pCString = (char *(*)(REALstring)) CallResolver("StringGetCString");
 	if (pCString) return (const char *)pCString(str);
 	else return (const char *)0;
 }
 
+size_t REALStringLength(REALstring str)
+{
+	static RBInteger (*pLenB)(REALstring);
+	if (!pLenB)
+		pLenB = (RBInteger (*)(REALstring))REALLoadFrameworkMethod( "LenB( s as string ) as integer" );
+	
+	if (pLenB) {
+		return pLenB(str);
+	} else {
+		return 0;
+	}
+}
 const unsigned char *REALPString(REALstring str)
 {
-	static unsigned long (*pPString)(REALstring) = nil;
+	static unsigned char *(*pPString)(REALstring) = nil;
 	if (!pPString)
-		pPString = (unsigned long (*)(REALstring)) CallResolver("StringGetPString");
+		pPString = (unsigned char *(*)(REALstring)) CallResolver("StringGetPString");
 	if (pPString) return (const unsigned char *)pPString(str);
 	else return (const unsigned char *)0;
 }
 
 REALproc REALInterfaceRoutine(REALobject obj, const char *interfaceName, const char *methodName)
 {
-	static unsigned long (*pInterfaceRoutine)(REALobject, const char *, const char *) = nil;
+	static REALproc (*pInterfaceRoutine)(REALobject, const char *, const char *) = nil;
 	if (!pInterfaceRoutine)
-		pInterfaceRoutine = (unsigned long (*)(REALobject, const char *, const char *)) CallResolver("GetInterfaceRoutine");
-	if (pInterfaceRoutine) return (REALproc)pInterfaceRoutine(obj, interfaceName, methodName);
-	else return (REALproc)0;
+		pInterfaceRoutine = (REALproc (*)(REALobject, const char *, const char *)) CallResolver("GetInterfaceRoutine");
+	if (pInterfaceRoutine) return pInterfaceRoutine(obj, interfaceName, methodName);
+	else return 0;
 }
 
 void REALPictureClearCache(REALpicture pic)
@@ -2075,9 +2527,9 @@ void REALPictureClearCache(REALpicture pic)
 #if TARGET_WIN32
 void REALDrawPicturePrimitive(HDC hDC, REALpicture pic, const Rect *rBounds, int bTransparent)
 {
-	static void (*pDrawPicturePrimitive)(HDC, REALpicture, const Rect *, int) = nil;
+	static void(*pDrawPicturePrimitive)(HDC, REALpicture, const Rect *, int) = nil;
 	if (!pDrawPicturePrimitive)
-		pDrawPicturePrimitive = (void (*)(HDC, REALpicture, const Rect *, int)) CallResolver("drawPicturePrimitive");
+		pDrawPicturePrimitive = (void(*)(HDC, REALpicture, const Rect *, int)) CallResolver("drawPicturePrimitive");
 	if (pDrawPicturePrimitive) pDrawPicturePrimitive(hDC, pic, rBounds, bTransparent);
 }
 #endif
@@ -2092,57 +2544,38 @@ void REALDrawPicturePrimitive(REALpicture pic, const Rect *rBounds, int bTranspa
 }
 #endif
 
-#if TARGET_CARBON && !TARGET_COCOA
-void REALRegisterEventFilter(REALEventCallback callback, long param)
-{
-	static void (*pRegisterEventFilter)(REALEventCallback, long param);
-	if (!pRegisterEventFilter)
-		pRegisterEventFilter = (void (*)(REALEventCallback, long)) CallResolver("PluginRegisterEventFilter");
-	if (pRegisterEventFilter) pRegisterEventFilter(callback, param);
-}
-#endif
-
 void REALGetControlBounds(REALcontrolInstance instance, Rect *rBounds)
 {
-	static void (*pGetControlBounds)(REALcontrolInstance, Rect *) = nil;
+	static void(*pGetControlBounds)(REALcontrolInstance, Rect *) = nil;
 	if (!pGetControlBounds)
-		pGetControlBounds = (void (*)(REALcontrolInstance, Rect *)) CallResolver("GetControlBounds");
+		pGetControlBounds = (void(*)(REALcontrolInstance, Rect *)) CallResolver("GetControlBounds");
 	if (pGetControlBounds) pGetControlBounds(instance, rBounds);
 }
 
-long REALGetControlVisible(REALcontrolInstance instance)
+bool REALGetControlVisible(REALcontrolInstance instance)
 {
-	static long (*pGetControlVisible)(REALcontrolInstance) = nil;
+	static RBBoolean (*pGetControlVisible)(REALcontrolInstance) = nil;
 	if (!pGetControlVisible)
-		pGetControlVisible = (long (*)(REALcontrolInstance)) CallResolver("GetControlVisible");
+		pGetControlVisible = (RBBoolean(*)(REALcontrolInstance)) CallResolver("GetControlVisible");
 	if (pGetControlVisible) return pGetControlVisible(instance);
-	else return (long)0;
+	else return false;
 }
 
 Boolean REALGetControlEnabled(REALcontrolInstance instance)
 {
-	static Boolean (*pGetControlEnabled)(REALcontrolInstance) = nil;
+	static RBBoolean (*pGetControlEnabled)(REALcontrolInstance) = nil;
 	if (!pGetControlEnabled)
-		pGetControlEnabled = (Boolean (*)(REALcontrolInstance)) CallResolver("REALGetControlEnabled");
+		pGetControlEnabled = (RBBoolean (*)(REALcontrolInstance)) CallResolver("REALGetControlEnabled");
 	if (pGetControlEnabled) return pGetControlEnabled(instance);
-	else return (Boolean)0;
+	else return 0;
 }
 
-void REALSetControlVisible(REALcontrolInstance instance, unsigned long visible)
+void REALSetControlVisible(REALcontrolInstance instance, bool visible)
 {
-	static void (*pSetControlVisible)(REALcontrolInstance, unsigned long) = nil;
+	static void (*pSetControlVisible)(REALcontrolInstance, RBBoolean) = nil;
 	if (!pSetControlVisible)
-		pSetControlVisible = (void (*)(REALcontrolInstance, unsigned long)) CallResolver("SetControlVisible");
+		pSetControlVisible = (void(*)(REALcontrolInstance, RBBoolean)) CallResolver("SetControlVisible");
 	if (pSetControlVisible) pSetControlVisible(instance, visible);
-}
-
-REALgraphics REALGetControlGraphics(REALcontrolInstance instance)
-{
-	static unsigned long (*pGetControlGraphics)(REALcontrolInstance) = nil;
-	if (!pGetControlGraphics)
-		pGetControlGraphics = (unsigned long (*)(REALcontrolInstance)) CallResolver("REALGetControlGraphics");
-	if (pGetControlGraphics) return (REALgraphics)pGetControlGraphics(instance);
-	else return (REALgraphics)0;
 }
 
 #if TARGET_WIN32
@@ -2159,40 +2592,50 @@ int REALGetWin32Charset(void)
 #if TARGET_WIN32 || UNIX_ANSI
 REALfolderItem REALFolderItemFromPath(const char *path)
 {
-	static unsigned long (*pFolderItemFromPath)(const char *) = nil;
+	static REALfolderItem (*pFolderItemFromPath)(const char *) = nil;
 	if (!pFolderItemFromPath)
-		pFolderItemFromPath = (unsigned long (*)(const char *)) CallResolver("FolderItemFromPath");
-	if (pFolderItemFromPath) return (REALfolderItem)pFolderItemFromPath(path);
-	else return (REALfolderItem)0;
+		pFolderItemFromPath = (REALfolderItem(*)(const char *)) CallResolver("FolderItemFromPath");
+	if (pFolderItemFromPath) return pFolderItemFromPath(path);
+	else return 0;
 }
 #endif
 
 REALstring REALpathFromFolderItem(REALfolderItem item)
 {
-	static unsigned long (*pPathFromFolderItem)(REALfolderItem) = nil;
+	static REALstring (*pPathFromFolderItem)(REALfolderItem) = nil;
 	if (!pPathFromFolderItem)
-		pPathFromFolderItem = (unsigned long (*)(REALfolderItem)) CallResolver("REALpathFromFolderItem");
-	if (pPathFromFolderItem) return (REALstring)pPathFromFolderItem(item);
-	else return (REALstring)0;
+		pPathFromFolderItem = (REALstring(*)(REALfolderItem)) CallResolver("REALpathFromFolderItem");
+	if (pPathFromFolderItem) return pPathFromFolderItem(item);
+	else return 0;
 }
 
 #if TARGET_WIN32
 HDC REALGraphicsDC(REALgraphics context)
 {
-	static unsigned long (*pGraphicsDC)(REALgraphics) = nil;
+	static HDC (*pGraphicsDC)(REALgraphics) = nil;
 	if (!pGraphicsDC)
-		pGraphicsDC = (unsigned long (*)(REALgraphics)) CallResolver("REALGraphicsDC");
-	if (pGraphicsDC) return (HDC)pGraphicsDC(context);
-	else return (HDC)0;
+		pGraphicsDC = (HDC (*)(REALgraphics)) CallResolver("REALGraphicsDC");
+	if (pGraphicsDC) return pGraphicsDC(context);
+	else return 0;
+}
+#endif
+
+#if TARGET_WIN32
+void REALGraphicsReleaseDC(REALgraphics context)
+{
+	static void (*pGraphicsReleaseDC)(REALgraphics) = nil;
+	if (!pGraphicsReleaseDC)
+		pGraphicsReleaseDC = (void (*)(REALgraphics)) CallResolver("REALGraphicsReleaseDC");
+	if (pGraphicsReleaseDC) pGraphicsReleaseDC(context);
 }
 #endif
 
 #if TARGET_COCOA
 CGContextRef REALGraphicsDC(REALgraphics context)
 {
-	static unsigned long (*pGraphicsCGContext)(REALgraphics) = nil;
+	static CGContextRef (*pGraphicsCGContext)(REALgraphics) = nil;
 	if (!pGraphicsCGContext)
-		pGraphicsCGContext = (unsigned long (*)(REALgraphics)) CallResolver("REALGraphicsDC");
+		pGraphicsCGContext = (CGContextRef (*)(REALgraphics)) CallResolver("REALGraphicsDC");
 	if (pGraphicsCGContext) return (CGContextRef)pGraphicsCGContext(context);
 	else return (CGContextRef)0;
 }
@@ -2235,16 +2678,6 @@ void REALSetSpecialBackground(REALcontrolInstance instance, COLORREF *pcolor)
 }
 #endif
 
-#if TARGET_CARBON && !TARGET_COCOA
-void REALSetSpecialBackground(REALcontrolInstance instance)
-{
-	static void (*pSetSpecialBackground)(REALcontrolInstance) = nil;
-	if (!pSetSpecialBackground)
-		pSetSpecialBackground = (void (*)(REALcontrolInstance)) CallResolver("REALSetSpecialBackground");
-	if (pSetSpecialBackground) pSetSpecialBackground(instance);
-}
-#endif
-
 REALwindow REALGetControlWindow(REALcontrolInstance instance)
 {
 	static REALwindow (*pGetControlWindow)(REALcontrolInstance) = nil;
@@ -2257,77 +2690,22 @@ REALwindow REALGetControlWindow(REALcontrolInstance instance)
 #if TARGET_COCOA
 NSWindow *REALGetWindowHandle(REALwindow window)
 {
-	static unsigned long (*pGetWindowHandle)(REALwindow) = nil;
+	static NSWindow *(*pGetWindowHandle)(REALwindow) = nil;
 	if (!pGetWindowHandle)
-		pGetWindowHandle = (unsigned long (*)(REALwindow)) CallResolver("REALGetWindowHandle");
-	if (pGetWindowHandle) return (NSWindow *)pGetWindowHandle(window);
-	else return (NSWindow *)0;
-}
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-WindowPtr REALGetWindowHandle(REALwindow window)
-{
-	static unsigned long (*pGetWindowHandle)(REALwindow) = nil;
-	if (!pGetWindowHandle)
-		pGetWindowHandle = (unsigned long (*)(REALwindow)) CallResolver("REALGetWindowHandle");
-	if (pGetWindowHandle) return (WindowPtr)pGetWindowHandle(window);
-	else return (WindowPtr)0;
+		pGetWindowHandle = (NSWindow * (*)(REALwindow)) CallResolver("REALGetWindowHandle");
+	if (pGetWindowHandle) return pGetWindowHandle(window);
+	else return 0;
 }
 #endif
 
 #if TARGET_COCOA
 NSView *REALGetControlHandle(REALcontrolInstance control)
 {
-	static unsigned long (*pGetControlHandle)(REALcontrolInstance) = nil;
+	static NSView *(*pGetControlHandle)(REALcontrolInstance) = nil;
 	if (!pGetControlHandle)
-		pGetControlHandle = (unsigned long (*)(REALcontrolInstance)) CallResolver("REALGetControlHandle");
-	if (pGetControlHandle) return (NSView *)pGetControlHandle(control);
-	else return (NSView *)0;
-}
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-ControlHandle REALGetControlHandle(REALcontrolInstance control)
-{
-	static unsigned long (*pGetControlHandle)(REALcontrolInstance) = nil;
-	if (!pGetControlHandle)
-		pGetControlHandle = (unsigned long (*)(REALcontrolInstance)) CallResolver("REALGetControlHandle");
-	if (pGetControlHandle) return (ControlHandle)pGetControlHandle(control);
-	else return (ControlHandle)0;
-}
-#endif
-
-#if TARGET_CARBON && !TARGET_COCOA
-MenuHandle REALGetPopupMenuHandle(REALpopupMenu popup)
-{
-	static unsigned long (*pGetPopupMenuHandle)(REALpopupMenu) = nil;
-	if (!pGetPopupMenuHandle)
-		pGetPopupMenuHandle = (unsigned long (*)(REALpopupMenu)) CallResolver("REALGetPopupMenuHandle");
-	if (pGetPopupMenuHandle) return (MenuHandle)pGetPopupMenuHandle(popup);
-	else return (MenuHandle)0;
-}
-#endif
-
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-QT_NAMESPACE MovieController REALgetMoviePlayerController(REALmoviePlayer instance)
-{
-	static unsigned long (*pGetMoviePlayerController)(REALmoviePlayer) = nil;
-	if (!pGetMoviePlayerController)
-		pGetMoviePlayerController = (unsigned long (*)(REALmoviePlayer)) CallResolver("getMoviePlayerController");
-	if (pGetMoviePlayerController) return (QT_NAMESPACE MovieController)pGetMoviePlayerController(instance);
-	else return (QT_NAMESPACE MovieController)0;
-}
-#endif
-
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-QT_NAMESPACE Movie REALgetMovieMovie(REALmovie instance)
-{
-	static unsigned long (*pGetMovieMovie)(REALmovie) = nil;
-	if (!pGetMovieMovie)
-		pGetMovieMovie = (unsigned long (*)(REALmovie)) CallResolver("getMovieMovie");
-	if (pGetMovieMovie) return (QT_NAMESPACE Movie)pGetMovieMovie(instance);
-	else return (QT_NAMESPACE Movie)0;
+		pGetControlHandle = (NSView *(*)(REALcontrolInstance)) CallResolver("REALGetControlHandle");
+	if (pGetControlHandle) return pGetControlHandle(control);
+	else return 0;
 }
 #endif
 
@@ -2357,20 +2735,20 @@ void REALSocketClose(REALsocket socket)
 
 REALstring REALSocketReadAll(REALsocket socket)
 {
-	static unsigned long (*pSocketReadAll)(REALsocket) = nil;
+	static REALstring (*pSocketReadAll)(REALsocket) = nil;
 	if (!pSocketReadAll)
-		pSocketReadAll = (unsigned long (*)(REALsocket)) CallResolver("pluginSocketReadAll");
-	if (pSocketReadAll) return (REALstring)pSocketReadAll(socket);
-	else return (REALstring)0;
+		pSocketReadAll = (REALstring(*)(REALsocket)) CallResolver("pluginSocketReadAll");
+	if (pSocketReadAll) return pSocketReadAll(socket);
+	else return 0;
 }
 
 REALstring REALSocketRead(REALsocket socket, int count)
 {
-	static unsigned long (*pSocketRead)(REALsocket, int) = nil;
+	static REALstring(*pSocketRead)(REALsocket, int) = nil;
 	if (!pSocketRead)
-		pSocketRead = (unsigned long (*)(REALsocket, int)) CallResolver("pluginSocketRead");
-	if (pSocketRead) return (REALstring)pSocketRead(socket, count);
-	else return (REALstring)0;
+		pSocketRead = (REALstring(*)(REALsocket, int)) CallResolver("pluginSocketRead");
+	if (pSocketRead) return pSocketRead(socket, count);
+	else return 0;
 }
 
 void REALSocketWrite(REALsocket socket, REALstring data)
@@ -2392,11 +2770,11 @@ int REALSocketLastErrorCode(REALsocket socket, int unused)
 
 REALstring REALSocketLookahead(REALsocket socket, int unused)
 {
-	static unsigned long (*pSocketLookahead)(REALsocket, int) = nil;
+	static REALstring (*pSocketLookahead)(REALsocket, int) = nil;
 	if (!pSocketLookahead)
-		pSocketLookahead = (unsigned long (*)(REALsocket, int)) CallResolver("pluginSocketLookahead");
-	if (pSocketLookahead) return (REALstring)pSocketLookahead(socket, unused);
-	else return (REALstring)0;
+		pSocketLookahead = (REALstring(*)(REALsocket, int)) CallResolver("pluginSocketLookahead");
+	if (pSocketLookahead) return pSocketLookahead(socket, unused);
+	else return 0;
 }
 
 REALstring REALSocketLocalAddressGetter(REALsocket socket)
@@ -2433,177 +2811,157 @@ void REALMessageBox(REALstring text)
 	if (pMessageBox) pMessageBox(text);
 }
 
-void REALSetControlEnabled(REALcontrolInstance instance, long unused, Boolean enable)
+void REALSetControlEnabled(REALcontrolInstance instance, RBInteger unused, Boolean enable)
 {
-	static void (*pSetControlEnabled)(REALcontrolInstance, long, Boolean) = nil;
+	static void(*pSetControlEnabled)(REALcontrolInstance, RBInteger, RBBoolean) = nil;
 	if (!pSetControlEnabled)
-		pSetControlEnabled = (void (*)(REALcontrolInstance, long, Boolean)) CallResolver("controlEnabledSetter");
+		pSetControlEnabled = (void(*)(REALcontrolInstance, RBInteger, RBBoolean)) CallResolver("controlEnabledSetter");
 	if (pSetControlEnabled) pSetControlEnabled(instance, unused, enable);
 }
 
-long REALGetControlPosition(REALcontrolInstance instance, long which)
+RBInteger REALGetControlPosition(REALcontrolInstance instance, RBInteger which)
 {
-	static unsigned long (*pGetControlPosition)(REALcontrolInstance, long) = nil;
+	static RBInteger (*pGetControlPosition)(REALcontrolInstance, RBInteger) = nil;
 	if (!pGetControlPosition)
-		pGetControlPosition = (unsigned long (*)(REALcontrolInstance, long)) CallResolver("ctlPosGetter");
-	if (pGetControlPosition) return (long)pGetControlPosition(instance, which);
-	else return (long)0;
+		pGetControlPosition = (RBInteger(*)(REALcontrolInstance, RBInteger)) CallResolver("ctlPosGetter");
+	if (pGetControlPosition) return pGetControlPosition(instance, which);
+	else return 0;
 }
 
-void REALSetControlPosition(REALcontrolInstance instance, long which, long value)
+void REALSetControlPosition(REALcontrolInstance instance, RBInteger which, RBInteger value)
 {
-	static void (*pSetControlPosition)(REALcontrolInstance, long, long) = nil;
+	static void(*pSetControlPosition)(REALcontrolInstance, RBInteger, RBInteger) = nil;
 	if (!pSetControlPosition)
-		pSetControlPosition = (void (*)(REALcontrolInstance, long, long)) CallResolver("ctlPosSetter");
+		pSetControlPosition = (void(*)(REALcontrolInstance, RBInteger, RBInteger)) CallResolver("ctlPosSetter");
 	if (pSetControlPosition) pSetControlPosition(instance, which, value);
 }
 
-#if TARGET_CARBON && !TARGET_COCOA
-void REALRefreshWindow(unsigned long macWindowPtr)
-{
-	static void (*pRefreshWindow)(unsigned long) = nil;
-	if (!pRefreshWindow)
-		pRefreshWindow = (void (*)(unsigned long)) CallResolver("REALRefreshWindow");
-	if (pRefreshWindow) pRefreshWindow(macWindowPtr);
-}
-#endif
-
 REALgraphics REALGetPictureGraphics(REALpicture picture)
 {
-	static unsigned long (*pGetPictureGraphics)(REALpicture) = nil;
+	static REALgraphics (*pGetPictureGraphics)(REALpicture) = nil;
 	if (!pGetPictureGraphics)
-		pGetPictureGraphics = (unsigned long (*)(REALpicture)) CallResolver("pluginPictureGraphicsGetter");
-	if (pGetPictureGraphics) return (REALgraphics)pGetPictureGraphics(picture);
-	else return (REALgraphics)0;
+		pGetPictureGraphics = (REALgraphics(*)(REALpicture)) CallResolver("pluginPictureGraphicsGetter");
+	if (pGetPictureGraphics) return pGetPictureGraphics(picture);
+	else return 0;
 }
 
-REALpicture REALNewPicture(long width, long height, long depth)
+REALpicture REALNewPicture(RBInteger width, RBInteger height, RBInteger depth)
 {
-	static unsigned long (*pNewPicture)(long, long, long) = nil;
+	static REALpicture(*pNewPicture)(RBInteger, RBInteger, RBInteger) = nil;
 	if (!pNewPicture)
-		pNewPicture = (unsigned long (*)(long, long, long)) CallResolver("newPicture");
-	if (pNewPicture) return (REALpicture)pNewPicture(width, height, depth);
-	else return (REALpicture)0;
+		pNewPicture = (REALpicture(*)(RBInteger, RBInteger, RBInteger)) CallResolver("newPicture");
+	if (pNewPicture) return pNewPicture(width, height, depth);
+	else return 0;
 }
 
 REALmemoryBlock REALNewMemoryBlock(int bytes)
 {
-	static unsigned long (*pNewMemoryBlock)(int) = nil;
+	static REALmemoryBlock (*pNewMemoryBlock)(int) = nil;
 	if (!pNewMemoryBlock)
-		pNewMemoryBlock = (unsigned long (*)(int)) CallResolver("newMemoryBlock");
-	if (pNewMemoryBlock) return (REALmemoryBlock)pNewMemoryBlock(bytes);
-	else return (REALmemoryBlock)0;
+		pNewMemoryBlock = (REALmemoryBlock(*)(int)) CallResolver("newMemoryBlock");
+	if (pNewMemoryBlock) return pNewMemoryBlock(bytes);
+	else return 0;
 }
 
 void*REALMemoryBlockGetPtr(REALmemoryBlock memBlock)
 {
-	static unsigned long (*pMemoryBlockGetPtr)(REALmemoryBlock) = nil;
+	static void *(*pMemoryBlockGetPtr)(REALmemoryBlock) = nil;
 	if (!pMemoryBlockGetPtr)
-		pMemoryBlockGetPtr = (unsigned long (*)(REALmemoryBlock)) CallResolver("memoryBlockGetPtr");
-	if (pMemoryBlockGetPtr) return (void*)pMemoryBlockGetPtr(memBlock);
-	else return (void*)0;
+		pMemoryBlockGetPtr = (void *(*)(REALmemoryBlock)) CallResolver("memoryBlockGetPtr");
+	if (pMemoryBlockGetPtr) return pMemoryBlockGetPtr(memBlock);
+	else return 0;
 }
 
-int REALMemoryBlockGetSize(REALmemoryBlock memBlock)
+RBInteger REALMemoryBlockGetSize(REALmemoryBlock memBlock)
 {
-	static unsigned long (*pMemoryBlockGetSize)(REALmemoryBlock) = nil;
+	static RBInteger(*pMemoryBlockGetSize)(REALmemoryBlock) = nil;
 	if (!pMemoryBlockGetSize)
-		pMemoryBlockGetSize = (unsigned long (*)(REALmemoryBlock)) CallResolver("memoryBlockGetSize");
-	if (pMemoryBlockGetSize) return (int)pMemoryBlockGetSize(memBlock);
-	else return (int)0;
+		pMemoryBlockGetSize = (RBInteger(*)(REALmemoryBlock)) CallResolver("memoryBlockGetSize");
+	if (pMemoryBlockGetSize) return pMemoryBlockGetSize(memBlock);
+	else return 0;
 }
 
 REALmemoryBlock REALPtrToMemoryBlock(void*data)
 {
-	static unsigned long (*pPtrToMemoryBlock)(void*) = nil;
+	static REALmemoryBlock(*pPtrToMemoryBlock)(void*) = nil;
 	if (!pPtrToMemoryBlock)
-		pPtrToMemoryBlock = (unsigned long (*)(void*)) CallResolver("PtrToMemoryBlock");
-	if (pPtrToMemoryBlock) return (REALmemoryBlock)pPtrToMemoryBlock(data);
-	else return (REALmemoryBlock)0;
+		pPtrToMemoryBlock = (REALmemoryBlock(*)(void*)) CallResolver("PtrToMemoryBlock");
+	if (pPtrToMemoryBlock) return pPtrToMemoryBlock(data);
+	else return 0;
 }
 
-#if TARGET_WIN32 || X_WINDOW
-void REALSetAccelerator(REALcontrolInstance instance, REALstring key)
+int REALGetArrayInt(REALintArray array, RBInteger index)
 {
-	static void (*pSetAccelerator)(REALcontrolInstance, REALstring) = nil;
-	if (!pSetAccelerator)
-		pSetAccelerator = (void (*)(REALcontrolInstance, REALstring)) CallResolver("REALSetAccelerator");
-	if (pSetAccelerator) pSetAccelerator(instance, key);
-}
-#endif
-
-int REALGetArrayInt(REALintArray array, int index)
-{
-	static int (*pGetArrayInt)(REALintArray, int) = nil;
+	static int(*pGetArrayInt)(REALintArray, RBInteger) = nil;
 	if (!pGetArrayInt)
-		pGetArrayInt = (int (*)(REALintArray, int)) CallResolver("RuntimeDirectReadIntArray");
+		pGetArrayInt = (int(*)(REALintArray, RBInteger)) CallResolver("RuntimeDirectReadIntArray");
 	if (pGetArrayInt) return pGetArrayInt(array, index);
-	else return (int)0;
+	else return 0;
 }
 
-REALstring REALGetArrayString(REALstringArray array, int index)
+REALstring REALGetArrayString(REALstringArray array, RBInteger index)
 {
-	static REALstring (*pGetArrayString)(REALstringArray, int) = nil;
+	static REALstring(*pGetArrayString)(REALstringArray, RBInteger) = nil;
 	if (!pGetArrayString)
-		pGetArrayString = (REALstring (*)(REALstringArray, int)) CallResolver("RuntimeDirectReadStringArray");
+		pGetArrayString = (REALstring(*)(REALstringArray, RBInteger)) CallResolver("RuntimeDirectReadStringArray");
 	if (pGetArrayString) return pGetArrayString(array, index);
-	else return (REALstring)0;
+	else return NULL;
 }
 
-REALobject REALGetArrayObject(REALobjectArray array, int index)
+REALobject REALGetArrayObject(REALobjectArray array, RBInteger index)
 {
-	static REALobject (*pGetArrayObject)(REALobjectArray, int) = nil;
+	static REALobject(*pGetArrayObject)(REALobjectArray, RBInteger) = nil;
 	if (!pGetArrayObject)
-		pGetArrayObject = (REALobject (*)(REALobjectArray, int)) CallResolver("RuntimeDirectReadObjectArray");
+		pGetArrayObject = (REALobject(*)(REALobjectArray, RBInteger)) CallResolver("RuntimeDirectReadObjectArray");
 	if (pGetArrayObject) return pGetArrayObject(array, index);
-	else return (REALobject)0;
+	else return NULL;
 }
 
-long REALGetTabPanelVisible(REALcontrolInstance instance)
+Boolean REALGetTabPanelVisible(REALcontrolInstance instance)
 {
-	static long (*pGetTabPanelVisible)(REALcontrolInstance) = nil;
+	static RBBoolean (*pGetTabPanelVisible)(REALcontrolInstance) = nil;
 	if (!pGetTabPanelVisible)
-		pGetTabPanelVisible = (long (*)(REALcontrolInstance)) CallResolver("GetTabPanelVisible");
+		pGetTabPanelVisible = (RBBoolean(*)(REALcontrolInstance)) CallResolver("GetTabPanelVisible");
 	if (pGetTabPanelVisible) return pGetTabPanelVisible(instance);
-	else return (long)0;
+	else return 0;
 }
 
 #if TARGET_WIN32
 HWND REALGetControlHandle(REALcontrolInstance control)
 {
-	static unsigned long (*pGetControlHandle)(REALcontrolInstance) = nil;
+	static HWND (*pGetControlHandle)(REALcontrolInstance) = nil;
 	if (!pGetControlHandle)
-		pGetControlHandle = (unsigned long (*)(REALcontrolInstance)) CallResolver("REALGetControlHandle");
-	if (pGetControlHandle) return (HWND)pGetControlHandle(control);
-	else return (HWND)0;
+		pGetControlHandle = (HWND(*)(REALcontrolInstance)) CallResolver("REALGetControlHandle");
+	if (pGetControlHandle) return pGetControlHandle(control);
+	else return 0;
 }
 #endif
 
 #if TARGET_WIN32
 HWND REALGetWindowHandle(REALwindow window)
 {
-	static unsigned long (*pGetWindowHandle)(REALwindow) = nil;
+	static HWND (*pGetWindowHandle)(REALwindow) = nil;
 	if (!pGetWindowHandle)
-		pGetWindowHandle = (unsigned long (*)(REALwindow)) CallResolver("REALGetWindowHandle");
-	if (pGetWindowHandle) return (HWND)pGetWindowHandle(window);
-	else return (HWND)0;
+		pGetWindowHandle = (HWND(*)(REALwindow)) CallResolver("REALGetWindowHandle");
+	if (pGetWindowHandle) return pGetWindowHandle(window);
+	else return 0;
 }
 #endif
 
 Boolean REALGetControlFocus(REALcontrolInstance instance)
 {
-	static unsigned long (*pGetControlFocus)(REALcontrolInstance) = nil;
+	static RBBoolean (*pGetControlFocus)(REALcontrolInstance) = nil;
 	if (!pGetControlFocus)
-		pGetControlFocus = (unsigned long (*)(REALcontrolInstance)) CallResolver("REALGetControlFocus");
-	if (pGetControlFocus) return (Boolean)pGetControlFocus(instance);
-	else return (Boolean)0;
+		pGetControlFocus = (RBBoolean(*)(REALcontrolInstance)) CallResolver("REALGetControlFocus");
+	if (pGetControlFocus) return pGetControlFocus(instance);
+	else return 0;
 }
 
 void REALSetControlFocus(REALcontrolInstance instance, Boolean focus)
 {
-	static void (*pSetControlFocus)(REALcontrolInstance, Boolean) = nil;
+	static void (*pSetControlFocus)(REALcontrolInstance, RBBoolean) = nil;
 	if (!pSetControlFocus)
-		pSetControlFocus = (void (*)(REALcontrolInstance, Boolean)) CallResolver("REALSetControlFocus");
+		pSetControlFocus = (void (*)(REALcontrolInstance, RBBoolean)) CallResolver("REALSetControlFocus");
 	if (pSetControlFocus) pSetControlFocus(instance, focus);
 }
 
@@ -2616,16 +2974,6 @@ REALcontrolInstance REALGetControlParent(REALcontrolInstance instance)
 	else return (REALcontrolInstance)0;
 }
 
-#if (TARGET_CARBON || TARGET_WIN32 || TARGET_COCOA) && !TARGET_64BIT
-void REALSetMovieMovie(REALmovie obj, Movie movie)
-{
-	static void (*pSetMovieMovie)(REALmovie, Movie) = nil;
-	if (!pSetMovieMovie)
-		pSetMovieMovie = (void (*)(REALmovie, Movie)) CallResolver("REALSetMovieMovie");
-	if (pSetMovieMovie) pSetMovieMovie(obj, movie);
-}
-#endif
-
 REALstring REALGetControlName(REALcontrolInstance control)
 {
 	static REALstring (*pGetControlName)(REALcontrolInstance) = nil;
@@ -2635,53 +2983,52 @@ REALstring REALGetControlName(REALcontrolInstance control)
 	else return (REALstring)0;
 }
 
-Boolean REALIsHIViewWindow(REALwindow window)
-{
-	static Boolean (*pIsHIViewWindow)(REALwindow) = nil;
-	if (!pIsHIViewWindow)
-		pIsHIViewWindow = (Boolean (*)(REALwindow)) CallResolver("REALIsHIViewWindow");
-	if (pIsHIViewWindow) return pIsHIViewWindow(window);
-	else return (Boolean)0;
-}
-
 #if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-unsigned long REALGetFontEncoding(const char *fontName)
+uint32_t REALGetFontEncoding(const char *fontName)
 {
-	static unsigned long (*pGetFontEncoding)(const char *) = nil;
+	static uint32_t (*pGetFontEncoding)(const char *) = nil;
 	if (!pGetFontEncoding)
-		pGetFontEncoding = (unsigned long (*)(const char *)) CallResolver("REALGetFontEncoding");
+		pGetFontEncoding = (uint32_t(*)(const char *)) CallResolver("REALGetFontEncoding");
 	if (pGetFontEncoding) return pGetFontEncoding(fontName);
-	else return (unsigned long)0;
+	else return 0;
 }
 #endif
 
 #if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
 REALpicture REALGetPictureMask(REALpicture pict, Boolean createIfNil)
 {
-	static REALpicture (*pGetPictureMask)(REALpicture, Boolean) = nil;
+	static REALpicture (*pGetPictureMask)(REALpicture, RBBoolean) = nil;
 	if (!pGetPictureMask)
-		pGetPictureMask = (REALpicture (*)(REALpicture, Boolean)) CallResolver("REALGetPictureMask");
+		pGetPictureMask = (REALpicture (*)(REALpicture, RBBoolean)) CallResolver("REALGetPictureMask");
 	if (pGetPictureMask) return pGetPictureMask(pict, createIfNil);
 	else return (REALpicture)0;
 }
 #endif
 
 #if TARGET_CARBON || TARGET_WIN32 || X_WINDOW || TARGET_COCOA
-void REALGraphicsDrawString(REALgraphics graphics, REALstring str, long x, long y, long width)
+void REALGraphicsDrawString(REALgraphics graphics, REALstring str, RBInteger x, RBInteger y, RBInteger width)
 {
-	static void (*pGraphicsDrawString)(REALgraphics, REALstring, long, long, long) = nil;
-	if (!pGraphicsDrawString)
-		pGraphicsDrawString = (void (*)(REALgraphics, REALstring, long, long, long)) CallResolver("RuntimeGraphicsDrawString");
-	if (pGraphicsDrawString) pGraphicsDrawString(graphics, str, x, y, width);
+	if (REALGetRBVersion() < 2018.02) {
+		static void(*pGraphicsDrawString)(REALgraphics, REALstring, RBInteger, RBInteger, RBInteger) = nil;
+		if (!pGraphicsDrawString)
+			pGraphicsDrawString = (void(*)(REALgraphics, REALstring, RBInteger, RBInteger, RBInteger)) CallResolver("RuntimeGraphicsDrawString");
+		if (pGraphicsDrawString) pGraphicsDrawString(graphics, str, x, y, width);
+	} else {
+		static void(*pGraphicsDrawString)(REALgraphics, REALstring, double, double, double) = nil;
+		if (!pGraphicsDrawString)
+			pGraphicsDrawString = (void(*)(REALgraphics, REALstring, double, double, double)) CallResolver("RuntimeGraphicsDrawString");
+		if (pGraphicsDrawString) pGraphicsDrawString(graphics, str, x, y, width);
+
+	}
 }
 #endif
 
 #if TARGET_CARBON || TARGET_COCOA
 CFStringRef REALGetStringCFString(REALstring str, Boolean stripAmpersands)
 {
-	static CFStringRef (*pGetStringCFString)(REALstring, Boolean) = nil;
+	static CFStringRef (*pGetStringCFString)(REALstring, RBBoolean) = nil;
 	if (!pGetStringCFString)
-		pGetStringCFString = (CFStringRef (*)(REALstring, Boolean)) CallResolver("REALGetStringCFString");
+		pGetStringCFString = (CFStringRef (*)(REALstring, RBBoolean)) CallResolver("REALGetStringCFString");
 	if (pGetStringCFString) return pGetStringCFString(str, stripAmpersands);
 	else return (CFStringRef)0;
 }
@@ -2690,9 +3037,9 @@ CFStringRef REALGetStringCFString(REALstring str, Boolean stripAmpersands)
 #if TARGET_CARBON || TARGET_COCOA
 void REALGetStringSystemStr(REALstring str, Boolean stripAmpersands, Str255 outStr255)
 {
-	static void (*pGetStringSystemStr)(REALstring, Boolean, Str255) = nil;
+	static void (*pGetStringSystemStr)(REALstring, RBBoolean, Str255) = nil;
 	if (!pGetStringSystemStr)
-		pGetStringSystemStr = (void (*)(REALstring, Boolean, Str255)) CallResolver("REALGetStringSystemStr");
+		pGetStringSystemStr = (void (*)(REALstring, RBBoolean, Str255)) CallResolver("REALGetStringSystemStr");
 	if (pGetStringSystemStr) pGetStringSystemStr(str, stripAmpersands, outStr255);
 }
 #endif
@@ -2717,51 +3064,73 @@ void REALSetGraphicsStyle(REALgraphics graphics, REALfontStyle*  styleInfo)
 }
 #endif
 
-long REALGraphicsStringWidth(REALgraphics graphics, REALstring str)
+double REALGraphicsStringWidth(REALgraphics graphics, REALstring str)
 {
-	static int (*pGraphicsStringWidth)(REALgraphics, REALstring) = nil;
-	if (!pGraphicsStringWidth)
-		pGraphicsStringWidth = (int (*)(REALgraphics, REALstring)) CallResolver("RuntimeGraphicsStringWidth");
-	if (pGraphicsStringWidth) return (long)pGraphicsStringWidth(graphics, str);
-	else return (long)0;
+	if (REALGetRBVersion() < 2007.02) {
+		static RBInteger(*pGraphicsStringWidth)(REALgraphics, REALstring) = nil;
+		if (!pGraphicsStringWidth)
+			pGraphicsStringWidth = (RBInteger(*)(REALgraphics, REALstring)) CallResolver("RuntimeGraphicsStringWidth");
+		if (pGraphicsStringWidth) return pGraphicsStringWidth(graphics, str);
+		else return 0;
+	} else {
+		static double(*pGraphicsStringWidth)(REALgraphics, REALstring) = nil;
+		if (!pGraphicsStringWidth)
+			pGraphicsStringWidth = (double(*)(REALgraphics, REALstring)) CallResolver("RuntimeGraphicsStringWidth");
+		if (pGraphicsStringWidth) return pGraphicsStringWidth(graphics, str);
+		else return 0;
+	}
 }
 
-long REALGraphicsStringHeight(REALgraphics graphics, REALstring str, long wrapWidth)
+double REALGraphicsStringHeight(REALgraphics graphics, REALstring str, double wrapWidth)
 {
-	static int (*pGraphicsStringHeight)(REALgraphics, REALstring, long) = nil;
-	if (!pGraphicsStringHeight)
-		pGraphicsStringHeight = (int (*)(REALgraphics, REALstring, long)) CallResolver("RuntimeGraphicsStringHeight");
-	if (pGraphicsStringHeight) return (long)pGraphicsStringHeight(graphics, str, wrapWidth);
-	else return (long)0;
+	if (REALGetRBVersion() < 2018.02) {
+		static RBInteger(*pGraphicsStringHeight)(REALgraphics, REALstring, RBInteger) = nil;
+		if (!pGraphicsStringHeight)
+			pGraphicsStringHeight = (RBInteger(*)(REALgraphics, REALstring, RBInteger)) CallResolver("RuntimeGraphicsStringHeight");
+		if (pGraphicsStringHeight) return pGraphicsStringHeight(graphics, str, wrapWidth);
+		else return 0;
+	} else {
+		static double(*pGraphicsStringHeight)(REALgraphics, REALstring, double) = nil;
+		if (!pGraphicsStringHeight)
+			pGraphicsStringHeight = (double(*)(REALgraphics, REALstring, double)) CallResolver("RuntimeGraphicsStringHeight");
+		if (pGraphicsStringHeight) return pGraphicsStringHeight(graphics, str, wrapWidth);
+		else return 0;
+	}
 }
 
-long REALGraphicsTextHeight(REALgraphics graphics)
+double REALGraphicsTextHeight(REALgraphics graphics)
 {
-	static int (*pGraphicsTextHeight)(REALgraphics) = nil;
-	if (!pGraphicsTextHeight)
-		pGraphicsTextHeight = (int (*)(REALgraphics)) CallResolver("RuntimeGraphicsTextHeight");
-	if (pGraphicsTextHeight) return (long)pGraphicsTextHeight(graphics);
-	else return (long)0;
+	if (REALGetRBVersion() < 2018.02) {
+		static RBInteger(*pGraphicsTextHeight)(REALgraphics) = nil;
+		if (!pGraphicsTextHeight)
+			pGraphicsTextHeight = (RBInteger(*)(REALgraphics)) CallResolver("RuntimeGraphicsTextHeight");
+		if (pGraphicsTextHeight) return pGraphicsTextHeight(graphics);
+		else return 0;
+	} else {
+		static double(*pGraphicsTextHeight)(REALgraphics) = nil;
+		if (!pGraphicsTextHeight)
+			pGraphicsTextHeight = (double(*)(REALgraphics)) CallResolver("RuntimeGraphicsTextHeight");
+		if (pGraphicsTextHeight) return pGraphicsTextHeight(graphics);
+		else return 0;
+	}
 }
 
-long REALGraphicsTextAscent(REALgraphics graphics)
+double REALGraphicsTextAscent(REALgraphics graphics)
 {
-	static int (*pGraphicsTextAscent)(REALgraphics) = nil;
-	if (!pGraphicsTextAscent)
-		pGraphicsTextAscent = (int (*)(REALgraphics)) CallResolver("RuntimeGraphicsTextAscent");
-	if (pGraphicsTextAscent) return (long)pGraphicsTextAscent(graphics);
-	else return (long)0;
+	if (REALGetRBVersion() < 2018.02) {
+		static RBInteger(*pGraphicsTextAscent)(REALgraphics) = nil;
+		if (!pGraphicsTextAscent)
+			pGraphicsTextAscent = (RBInteger(*)(REALgraphics)) CallResolver("RuntimeGraphicsTextAscent");
+		if (pGraphicsTextAscent) return pGraphicsTextAscent(graphics);
+		else return 0;
+	} else {
+		static double(*pGraphicsTextAscent)(REALgraphics) = nil;
+		if (!pGraphicsTextAscent)
+			pGraphicsTextAscent = (double(*)(REALgraphics)) CallResolver("RuntimeGraphicsTextAscent");
+		if (pGraphicsTextAscent) return pGraphicsTextAscent(graphics);
+		else return 0;
+	}
 }
-
-#if TARGET_CARBON && !TARGET_COCOA
-void REALReleasePopupMenuHandle(REALpopupMenu popup)
-{
-	static void (*pReleasePopupMenuHandle)(REALpopupMenu) = nil;
-	if (!pReleasePopupMenuHandle)
-		pReleasePopupMenuHandle = (void (*)(REALpopupMenu)) CallResolver("REALReleasePopupMenuHandle");
-	if (pReleasePopupMenuHandle) pReleasePopupMenuHandle(popup);
-}
-#endif
 
 void REALSocketListen(REALsocket socket)
 {
@@ -2815,13 +3184,18 @@ void *REALGraphicsGdkDrawable(REALgraphics context)
 #endif
 
 #if TARGET_WIN32
+REALgraphics REALGetControlGraphicsWithDC(REALcontrolInstance instance, HDC dc)
+{
+	static REALgraphics (*pGetControlGraphics)(REALcontrolInstance, HDC) = nil;
+	if (!pGetControlGraphics)
+		pGetControlGraphics = (REALgraphics (*)(REALcontrolInstance, HDC)) CallResolver("REALGetControlGraphicsWithDC");
+	if (pGetControlGraphics) return pGetControlGraphics(instance, dc);
+	else return 0;
+}
+
 REALgraphics REALGetControlGraphics(REALcontrolInstance instance, HDC dc)
 {
-	static unsigned long (*pGetControlGraphics)(REALcontrolInstance, HDC) = nil;
-	if (!pGetControlGraphics)
-		pGetControlGraphics = (unsigned long (*)(REALcontrolInstance, HDC)) CallResolver("REALGetControlGraphicsWithDC");
-	if (pGetControlGraphics) return (REALgraphics)pGetControlGraphics(instance, dc);
-	else return (REALgraphics)0;
+	return REALGetControlGraphicsWithDC(instance, dc);
 }
 #endif
 
@@ -2847,65 +3221,487 @@ CGImageRef REALCopyPictureCGImage(REALpicture pic)
 }
 #endif
 
-void REALGetGraphicsOrigin(REALgraphics context, long *originX, long *originY)
+#if !TARGET_64BIT
+Boolean REALGetPropValue(REALobject object, const char *propName, char *outValue)
 {
-	static void (*pGetGraphicsOrigin)(REALgraphics, long *, long *) = nil;
-	if (!pGetGraphicsOrigin)
-		pGetGraphicsOrigin = (void (*)(REALgraphics, long *, long *)) CallResolver("REALGetGraphicsOrigin");
-	if (pGetGraphicsOrigin) pGetGraphicsOrigin(context, originX, originY);
+	return REALGetPropValueInt8(object, propName, outValue);
 }
 
-void REALSetGraphicsOrigin(REALgraphics context, long originX, long originY)
+Boolean REALGetPropValue(REALobject object, const char *propName, unsigned char *outValue)
 {
-	static void (*pSetGraphicsOrigin)(REALgraphics, long, long) = nil;
-	if (!pSetGraphicsOrigin)
-		pSetGraphicsOrigin = (void (*)(REALgraphics, long, long)) CallResolver("REALSetGraphicsOrigin");
-	if (pSetGraphicsOrigin) pSetGraphicsOrigin(context, originX, originY);
+	return REALGetPropValueUInt8(object, propName, outValue);
+}
+#endif
+
+Boolean REALGetPropValue(REALobject object, const char *propName, short *outValue)
+{
+	return REALGetPropValueInt16(object, propName, outValue);
 }
 
-long REALstringStruct::Length(void)
+Boolean REALGetPropValue(REALobject object, const char *propName, unsigned short *outValue)
 {
-	if (this) {
-		static RBInteger (*pLenB)(REALstring);
-		if (!pLenB)
-			pLenB = (RBInteger (*)(REALstring))REALLoadFrameworkMethod( "LenB( s as string ) as integer" );
-		
-		if (pLenB) {
-			return pLenB(this);
-		} else {
-			return 0;
-		}
-	} else
-		return 0;
+	return REALGetPropValueUInt16(object, propName, outValue);
 }
 
-const char *REALstringStruct::CString()
+#if !TARGET_64BIT
+Boolean REALGetPropValue(REALobject object, const char *propName, int32_t *outValue)
 {
-	if (this) {
-		static unsigned long (*pCString)(REALstring) = nil;
-		if (!pCString)
-			pCString = (unsigned long (*)(REALstring)) CallResolver("StringGetCString");
-		if (pCString) return (const char *)pCString(this);
-		else return (const char *)0;
-	} else
-		return "";
+	return REALGetPropValueInt32(object, propName, outValue);
 }
 
-const unsigned char *REALstringStruct::PString()
+Boolean REALGetPropValue(REALobject object, const char *propName, long *outValue)
 {
-	if (this) {
-		static unsigned long (*pPString)(REALstring) = nil;
-		if (!pPString)
-			pPString = (unsigned long (*)(REALstring)) CallResolver("StringGetPString");
-		if (pPString) return (const unsigned char *)pPString(this);
-		else return (const unsigned char *)0;
-	} else {
-		#if TARGET_OS_MAC
-			return (unsigned char *)"\p";
-		#else
-			return (unsigned char *)"\0";
-		#endif
+	int32_t value;
+	Boolean result = REALGetPropValueInt32(object, propName, &value);
+	if (result) *outValue = value;
+	return result;
+}
+
+Boolean REALGetPropValue(REALobject object, const char *propName, unsigned long *outValue)
+{
+	uint32_t value32 = 0;
+	Boolean result = REALGetPropValueUInt32(object, propName, &value32);
+	if (result) *outValue = value32;
+	return result;
+}
+
+Boolean REALGetPropValue(REALobject object, const char *propName, RBInt64 *outValue)
+{
+	return REALGetPropValueInt64(object, propName, outValue);
+}
+
+Boolean REALGetPropValue(REALobject object, const char *propName, RBUInt64 *outValue)
+{
+	return REALGetPropValueUInt64(object, propName, outValue);
+}
+#endif
+
+Boolean REALGetPropValue(REALobject object, const char *propName, double *outValue)
+{
+	return REALGetPropValueDouble(object, propName, outValue);
+}
+
+Boolean REALGetPropValue(REALobject object, const char *propName, float *outValue)
+{
+	return REALGetPropValueSingle(object, propName, outValue);
+}
+
+Boolean REALGetPropValue(REALobject object, const char *propName, REALstring *outValue)
+{
+	return REALGetPropValueString(object, propName, outValue);
+}
+
+Boolean REALGetPropValue(REALobject object, const char *propName, REALobject *outValue)
+{
+	return REALGetPropValueObject(object, propName, outValue);
+}
+
+#if TARGET_CARBON || TARGET_COCOA
+Boolean REALGetPropValue(REALobject object, const char *propName, CFStringRef *outValue)
+{
+	return REALGetPropValueCFStringRef(object, propName, outValue);
+}
+#endif
+
+Boolean REALSetPropValue(REALobject object, const char *propName, REALstring value)
+{
+	return REALSetPropValueString(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, double value)
+{
+	return REALSetPropValueDouble(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, REALobject value)
+{
+	return REALSetPropValuePtr(object, propName, value);
+}
+
+#if !TARGET_64BIT
+Boolean REALSetPropValue(REALobject object, const char *propName, unsigned char value)
+{
+	return REALSetPropValueUInt8(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, char value)
+{
+	return REALSetPropValueInt8(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, unsigned long value)
+{
+	return REALSetPropValueUInt32(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, long value)
+{
+	return REALSetPropValueInt32(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, RBUInt64 value)
+{
+	return REALSetPropValueUInt64(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, RBInt64 value)
+{
+	return REALSetPropValueInt64(object, propName, value);
+}
+#endif
+
+Boolean REALSetPropValue(REALobject object, const char *propName, unsigned short value)
+{
+	return REALSetPropValueUInt16(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, short value)
+{
+	return REALSetPropValueInt16(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, float value)
+{
+	return REALSetPropValueSingle(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, const char *value)
+{
+	return REALSetPropValueCString(object, propName, value);
+}
+
+Boolean REALSetPropValue(REALobject object, const char *propName, const wchar_t *value)
+{
+	return REALSetPropValueWString(object, propName, value);
+}
+
+#if !TARGET_64BIT
+Boolean REALSetPropValue(REALobject object, const char *propName, const unsigned char *value)
+{
+	return REALSetPropValuePString(object, propName, value);
+}
+#endif
+
+#if TARGET_CARBON || TARGET_COCOA
+Boolean REALSetPropValue(REALobject object, const char *propName, CFStringRef value)
+{
+	return REALSetPropValueCFStringRef(object, propName, value);
+}
+#endif
+
+#if !TARGET_64BIT
+void REALInsertArrayValue(REALarray arr, RBInteger index, RBInt64 value)
+{
+	REALInsertArrayValueInt64(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, RBUInt64 value)
+{
+	REALInsertArrayValueUInt64(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, long value)
+{
+	REALInsertArrayValueInt32(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, unsigned long value)
+{
+	REALInsertArrayValueUInt32(arr, index, value);
+}
+#endif
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, short value)
+{
+	REALInsertArrayValueInt16(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, unsigned short value)
+{
+	REALInsertArrayValueUInt16(arr, index, value);
+}
+
+#if !TARGET_64BIT
+void REALInsertArrayValue(REALarray arr, RBInteger index, char value)
+{
+	REALInsertArrayValueInt8(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, unsigned char value)
+{
+	REALInsertArrayValueUInt8(arr, index, value);
+}
+#endif
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, double value)
+{
+	REALInsertArrayValueDouble(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, float value)
+{
+	REALInsertArrayValueSingle(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, REALstring value)
+{
+	REALInsertArrayValueString(arr, index, value);
+}
+
+void REALInsertArrayValue(REALarray arr, RBInteger index, REALobject value)
+{
+	REALInsertArrayValueObject(arr, index, value);
+}
+
+#if !TARGET_64BIT
+void REALGetArrayValue(REALarray arr, RBInteger index, char *value)
+{
+	REALGetArrayValueInt8(arr, index, value);
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, unsigned char *value)
+{
+	REALGetArrayValueUInt8(arr, index, value);
+}
+#endif
+
+void REALGetArrayValue(REALarray arr, RBInteger index, short *value)
+{
+	REALGetArrayValueInt16(arr, index, value);
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, unsigned short *value)
+{
+	REALGetArrayValueUInt16(arr, index, value);
+}
+
+#if !TARGET_64BIT
+void REALGetArrayValue(REALarray arr, RBInteger index, long *value)
+{
+	int32_t value32 = 0;
+	REALGetArrayValueInt32(arr, index, &value32);
+	*value = value32;
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, unsigned long *value)
+{
+	uint32_t value32 = 0;
+	REALGetArrayValueUInt32(arr, index, &value32);
+	*value = value32;
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, RBInt64 *value)
+{
+	REALGetArrayValueInt64(arr, index, value);
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, RBUInt64 *value)
+{
+	REALGetArrayValueUInt64(arr, index, value);
+}
+#endif
+
+void REALGetArrayValue(REALarray arr, RBInteger index, REALstring *value)
+{
+	REALGetArrayValueString(arr, index, value);
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, REALtext *value)
+{
+	REALGetArrayValueText(arr, index, value);
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, REALobject *value)
+{
+	REALGetArrayValueObject(arr, index, value);
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, double *value)
+{
+	REALGetArrayValueDouble(arr, index, value);
+}
+
+void REALGetArrayValue(REALarray arr, RBInteger index, float *value)
+{
+	REALGetArrayValueSingle(arr, index, value);
+}
+
+#if !TARGET_64BIT
+void REALSetArrayValue(REALarray arr, RBInteger index, char value)
+{
+	REALSetArrayValueInt8(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, unsigned char value)
+{
+	REALSetArrayValueUInt8(arr, index, value);
+}
+#endif
+
+void REALSetArrayValue(REALarray arr, RBInteger index, short value)
+{
+	REALSetArrayValueInt16(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, unsigned short value)
+{
+	REALSetArrayValueUInt16(arr, index, value);
+}
+
+#if !TARGET_64BIT
+void REALSetArrayValue(REALarray arr, RBInteger index, long value)
+{
+	REALSetArrayValueInt32(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, unsigned long value)
+{
+	REALSetArrayValueUInt32(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, RBInt64 value)
+{
+	REALSetArrayValueInt64(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, RBUInt64 value)
+{
+	REALSetArrayValueUInt64(arr, index, value);
+}
+#endif
+
+void REALSetArrayValue(REALarray arr, RBInteger index, double value)
+{
+	REALSetArrayValueDouble(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, float value)
+{
+	REALSetArrayValueSingle(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, REALstring value)
+{
+	REALSetArrayValueString(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, REALtext value)
+{
+	REALSetArrayValueText(arr, index, value);
+}
+
+void REALSetArrayValue(REALarray arr, RBInteger index, REALobject value)
+{
+	REALSetArrayValueObject(arr, index, value);
+}
+
+RBInteger REALGetPictureType(REALpicture pic)
+{
+	static RBInteger (*pGetPictureType)(REALpicture);
+	if (!pGetPictureType)
+		pGetPictureType = (RBInteger(*)(REALpicture))CallResolver("PluginPictureGetType");
+	if (pGetPictureType) return pGetPictureType(pic);
+	return 2; // Picture.Types.MutableBitmap
+}
+
+RBInteger REALCountClassProperties(REALobject obj)
+{
+	static void *(*pRBScriptResolver)(const char *entryName) = (void *(*)(const char *))CallResolver("GetRBScriptResolver");
+	if (!pRBScriptResolver) return 0;
+
+	static RBInteger(*pCountClassProperties)(void *);
+	static void *(*pRuntimeClassOf)(REALobject);
+	if (!pCountClassProperties && !pRuntimeClassOf) {
+		pCountClassProperties = (RBInteger(*)(void *))pRBScriptResolver("REALCountClassProperties");
+		pRuntimeClassOf = (void *(*)(REALobject))pRBScriptResolver("RuntimeClassOf");
 	}
+	if (pCountClassProperties && pRuntimeClassOf) {
+		void *classPtr = pRuntimeClassOf(obj);
+		if (!classPtr) return 0;
+
+		return pCountClassProperties(classPtr);
+	}
+	return 0;
+}
+
+RBBoolean REALGetClassProperty(REALobject obj, uint32_t index, void **getter, void **setter, long *param, REALstring *declaration)
+{
+	static void *(*pRBScriptResolver)(const char *entryName) = (void *(*)(const char *))CallResolver("GetRBScriptResolver");
+	if (!pRBScriptResolver) return 0;
+
+	static RBBoolean(*pGetClassProperty)(void *, uint32_t, void **, void**, long *, REALstring *);
+	static void *(*pRuntimeClassOf)(REALobject);
+	if (!pGetClassProperty && !pRuntimeClassOf) {
+		pGetClassProperty = (RBBoolean(*)(void *, uint32_t, void **, void**, long *, REALstring *))pRBScriptResolver("REALGetClassProperty");
+		pRuntimeClassOf = (void *(*)(REALobject))pRBScriptResolver("RuntimeClassOf");
+	}
+	if (pGetClassProperty && pRuntimeClassOf) {
+		void *classPtr = pRuntimeClassOf(obj);
+		if (!classPtr) return 0;
+
+		return pGetClassProperty(classPtr, index, getter, setter, param, declaration);
+	}
+	return false;
+}
+
+RBBoolean REALAddEventHandler(REALobject obj, REALstring eventName, void *handler)
+{
+	static RBBoolean(*pAddEventHandler)(REALobject, REALstring, void*);
+	if (!pAddEventHandler) {
+		pAddEventHandler = (RBBoolean(*)(REALobject, REALstring, void*))CallResolver("PluginAddEventHandler");
+	}
+	if (pAddEventHandler) return pAddEventHandler(obj, eventName, handler);
+	return false;
+}
+
+RBBoolean REALRemoveEventHandler(REALobject obj, REALstring eventName, void *handler)
+{
+	static RBBoolean(*pRemoveEventHandler)(REALobject, REALstring, void*);
+	if (!pRemoveEventHandler) {
+		pRemoveEventHandler = (RBBoolean(*)(REALobject, REALstring, void*))CallResolver("PluginRemoveEventHandler");
+	}
+	if (pRemoveEventHandler) return pRemoveEventHandler(obj, eventName, handler);
+	return false;
+}
+
+RBBoolean REALIsEventHandled(REALobject obj, REALstring eventName)
+{
+	static RBBoolean(*pIsEventHandled)(REALobject, REALstring);
+	if (!pIsEventHandled) {
+		pIsEventHandled = (RBBoolean(*)(REALobject, REALstring))CallResolver("PluginIsEventHandled");
+	}
+	if (pIsEventHandled) return pIsEventHandled(obj, eventName);
+	return false;
+}
+
+RBBoolean REALIsDarkMode()
+{
+	static RBBoolean(*pIsDarkMode)(void);
+	if (!pIsDarkMode) {
+		pIsDarkMode = (RBBoolean(*)(void))CallResolver("IsDarkMode");
+	}
+	if (pIsDarkMode) return pIsDarkMode();
+	return false;
+}
+
+RBBoolean REALIsXojoThread()
+{
+	static RBBoolean(*pIsXojoThread)(void);
+	if (!pIsXojoThread) {
+		pIsXojoThread = (RBBoolean(*)(void))CallResolver("IsXojoThread");
+	}
+	if (pIsXojoThread) return pIsXojoThread();
+	return false;
+}
+
+RBBoolean REALIsXojoMainThread()
+{
+	static RBBoolean(*pIsXojoMainThread)(void);
+	if (!pIsXojoMainThread) {
+		pIsXojoMainThread = (RBBoolean(*)(void))CallResolver("IsXojoMainThread");
+	}
+	if (pIsXojoMainThread) return pIsXojoMainThread();
+	return false;
 }
 
 #if _MSC_VER

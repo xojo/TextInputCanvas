@@ -1,7 +1,7 @@
 //
 //  TextInputCanvas.cpp
 //
-//  (c) 2013 Xojo, Inc. -- All Rights Reserved
+//  (c) 2021 Xojo, Inc. -- All Rights Reserved
 //
 
 #include <string.h>
@@ -28,6 +28,8 @@
 #endif // WINDOWS
 
 static REALclassRef sRectClass;
+static REALclassRef sXojoRectClass;
+static REALclassRef sDesktopUIControl;
 
 static void InvalidateTextRects( REALcontrolInstance control );
 static void LinuxSelectInputMethod( REALcontrolInstance control );
@@ -47,6 +49,34 @@ static void MouseUp( REALcontrolInstance inst, int x, int y );
 static void GotFocus( REALcontrolInstance control );
 static void LostFocus( REALcontrolInstance control );
 static void EnableMenuItems( REALcontrolInstance control );
+static void ScaleFactorChanged( REALcontrolInstance control, double newScaleFactor );
+
+static bool IsDesktopUIControl(REALcontrolInstance instance)
+{
+	if (sDesktopUIControl && REALObjectIsA(instance, sDesktopUIControl)) {
+		return true;
+	}
+
+	return false;
+}
+
+static void *GetControlData(REALcontrolInstance instance, REALcontrol *api2Definition, REALcontrol *api1Definition)
+{
+	if (IsDesktopUIControl(instance)) {
+		return REALGetControlData(instance, api2Definition);
+	}
+
+	return REALGetControlData(instance, api1Definition);
+}
+
+static void *GetEventHook(REALcontrolInstance instance, REALevent *api2Event, REALevent *api1Event)
+{
+	if (IsDesktopUIControl(instance)) {
+		return REALGetEventInstance(instance, api2Event);
+	}
+
+	return REALGetEventInstance(instance, api1Event);
+}
 
 static void FirePaintStub( REALcontrolInstance control, REALgraphics gfx )
 {
@@ -95,6 +125,32 @@ static REALevent sInputCanvasEvents[] = {
 	{ "GotFocus()" },
 	{ "LostFocus()" },
 	{ "EnableMenuItems()" }
+};
+
+static REALevent sDesktopInputCanvasEvents[] = {
+	{ "BaselineAtIndex( index as integer ) as integer" },
+	{ "CharacterAtPoint( x as double, y as double ) as integer" },
+	{ "DiscardIncompleteText()" },
+	{ "DoCommand( command as string ) as boolean" },
+	{ "FontNameAtLocation( location as integer ) as string" },
+	{ "FontSizeAtLocation( location as integer ) as integer" },
+	{ "IncompleteTextRange() as TextRange" },
+	{ "SetIncompleteText( text as string, replacementRange as TextRange, relativeSelection as TextRange )" },
+	{ "InsertText( text as string, range as TextRange )" },
+	{ "IsEditable() as boolean" },
+	{ "KeyFallsThrough( key as string ) as boolean" },
+	{ "Paint( g as Graphics, areas() as Xojo.Rect )" },
+	{ "RectForRange( byref range as TextRange ) as Xojo.Rect" },
+	{ "SelectedRange() as TextRange" },
+	{ "TextForRange( range as TextRange ) as string " },
+	{ "TextLength() as integer" },
+	{ "MouseDown(x as Integer, y as Integer) as Boolean" },
+	{ "MouseDrag(x as Integer, y as Integer)" },
+	{ "MouseUp(x as Integer, y as Integer)" },
+	{ "FocusReceived()" },
+	{ "FocusLost()" },
+	{ "MenuBarSelected()" },
+	{ "ScaleFactorChanged()" }
 };
 
 static REALconstant sInputCanvasConstants[] = {
@@ -178,6 +234,7 @@ static REALconstant sInputCanvasConstants[] = {
 	CMD_CONST(CmdInsertTab, insertTab:),
 	CMD_CONST(CmdInsertBacktab, insertBacktab:),
 	CMD_CONST(CmdInsertNewline, insertNewline:),
+	CMD_CONST(CmdInsertBreakCommand, insertBreakCommand:),
 	CMD_CONST(CmdInsertParagraphSeparator, insertParagraphSeparator:),
 	CMD_CONST(CmdInsertNewlineIgnoringFieldEditor, insertNewlineIgnoringFieldEditor:),
 	CMD_CONST(CmdInsertTabIgnoringFieldEditor, insertTabIgnoringFieldEditor:),
@@ -262,15 +319,18 @@ static REALcontrolBehaviour sInputCanvasBehavior = {
 	nullptr, // keyUpFunction,
 	FirePaint,
 #if WIDGET_GTK
-	UnfilteredKeyDownEvent
+	UnfilteredKeyDownEvent,
+#else
+	nullptr,
 #endif
+	ScaleFactorChanged,
 };
 
 static REALcontrol sInputCanvasControl = {
 	kCurrentREALControlVersion,
 	"TextInputCanvas",
 	sizeof(InputCanvasData),
-	REALcontrolAcceptFocus | REALcontrolHandlesKeyboardNavigation | REALdontEraseBackground, // flags
+	REALcontrolAcceptFocus | REALcontrolHandlesKeyboardNavigation, // flags
 	0, 0, // unused (toolbar pict)
 	100, 100, // default width/height
 	nullptr, 0, // no properties
@@ -284,10 +344,31 @@ static REALcontrol sInputCanvasControl = {
 	sInputCanvasConstants, sizeof(sInputCanvasConstants) / sizeof(sInputCanvasConstants[0])
 };
 
+static REALcontrol sDesktopInputCanvasControl = {
+	kCurrentREALControlVersion,
+	"DesktopTextInputCanvas",
+	sizeof(InputCanvasData),
+	REALdesktopControl | REALcontrolAcceptFocus | REALcontrolHandlesKeyboardNavigation, // flags
+	0, 0, // unused (toolbar pict)
+	100, 100, // default width/height
+	nullptr, 0, // no properties
+	sInputCanvasMethods, sizeof(sInputCanvasMethods) / sizeof(sInputCanvasMethods[0]),
+	sDesktopInputCanvasEvents, sizeof(sDesktopInputCanvasEvents) / sizeof(sDesktopInputCanvasEvents[0]),
+	&sInputCanvasBehavior,
+	0, // forSystemUse
+	nullptr, 0, // event instances
+	nullptr, // interfaces
+	nullptr, 0, // attributes
+	sInputCanvasConstants, sizeof(sInputCanvasConstants) / sizeof(sInputCanvasConstants[0])
+};
+
 void RegisterTextInputCanvasControl()
 {
 	REALRegisterControl( &sInputCanvasControl );
+	REALRegisterControl( &sDesktopInputCanvasControl );
 	sRectClass = REALGetClassRef( "REALbasic.Rect" );
+	sXojoRectClass = REALGetClassRef( "Xojo.Rect" );
+	sDesktopUIControl = REALGetClassRef( "DesktopUIControl" );
 }
 
 // MARK: - TextInputCanvas event forwarding
@@ -303,7 +384,7 @@ void RegisterTextInputCanvasControl()
 int FireBaselineAtIndex( REALcontrolInstance control, int index )
 {
 	RBInteger (* fp)(REALcontrolInstance, RBInteger);
-	fp = (RBInteger (*)(REALcontrolInstance, RBInteger))REALGetEventInstance( control, &sInputCanvasEvents[0] );
+	fp = (RBInteger (*)(REALcontrolInstance, RBInteger))GetEventHook( control, &sDesktopInputCanvasEvents[0], &sInputCanvasEvents[0] );
 	if (fp) {
 		return fp( control, index );
 	}
@@ -321,12 +402,20 @@ int FireBaselineAtIndex( REALcontrolInstance control, int index )
 //       x - the x position
 //       y - the y position
 // Returns: the zero-based character index closest to the point
-int FireCharacterAtPoint( REALcontrolInstance control, int x, int y )
+int FireCharacterAtPoint( REALcontrolInstance control, double x, double y )
 {
-	RBInteger (* fp)(REALcontrolInstance, RBInteger, RBInteger);
-	fp = (RBInteger (*)(REALcontrolInstance, RBInteger, RBInteger))REALGetEventInstance( control, &sInputCanvasEvents[1] );
-	if (fp) {
-		return fp( control, x, y );
+	if (IsDesktopUIControl(control)) {
+		RBInteger (* fp)(REALcontrolInstance, double, double);
+		fp = (RBInteger (*)(REALcontrolInstance, double, double))REALGetEventInstance(control, &sDesktopInputCanvasEvents[1]);
+		if (fp) {
+			return fp( control, x, y );
+		}
+	} else {
+		RBInteger (* fp)(REALcontrolInstance, RBInteger, RBInteger);
+		fp = (RBInteger (*)(REALcontrolInstance, RBInteger, RBInteger))REALGetEventInstance(control, &sInputCanvasEvents[1]);
+		if (fp) {
+			return fp( control, x, y );
+		}
 	}
 	
 	return 0;
@@ -342,7 +431,7 @@ int FireCharacterAtPoint( REALcontrolInstance control, int x, int y )
 void FireDiscardIncompleteText( REALcontrolInstance control )
 {
 	void (* fp)(REALcontrolInstance);
-	fp = (void (*)(REALcontrolInstance ))REALGetEventInstance( control, &sInputCanvasEvents[2] );
+	fp = (void (*)(REALcontrolInstance ))GetEventHook( control, &sDesktopInputCanvasEvents[2], &sInputCanvasEvents[2] );
 	if (fp) {
 		return fp( control );
 	}
@@ -361,7 +450,7 @@ void FireDiscardIncompleteText( REALcontrolInstance control )
 bool FireDoCommand( REALcontrolInstance control, const char *command )
 {
 	RBBoolean (* fp)(REALcontrolInstance, REALstring);
-	fp = (RBBoolean (*)(REALcontrolInstance, REALstring))REALGetEventInstance( control, &sInputCanvasEvents[3] );
+	fp = (RBBoolean (*)(REALcontrolInstance, REALstring))GetEventHook( control, &sDesktopInputCanvasEvents[3], &sInputCanvasEvents[3] );
 	if (fp) {
 		REALstring commandStr = REALBuildString( command, strlen( command ), kREALTextEncodingUTF8 );
 		bool result = fp( control, commandStr );
@@ -383,7 +472,7 @@ bool FireDoCommand( REALcontrolInstance control, const char *command )
 REALstring FireFontNameAtLocation( REALcontrolInstance control, int location )
 {
 	REALstring (* fp)(REALcontrolInstance, int);
-	fp = (REALstring (*)(REALcontrolInstance, int))REALGetEventInstance( control, &sInputCanvasEvents[4] );
+	fp = (REALstring (*)(REALcontrolInstance, int))GetEventHook( control, &sDesktopInputCanvasEvents[4], &sInputCanvasEvents[4] );
 	if (fp) {
 		return fp( control, location );
 	}
@@ -402,7 +491,7 @@ REALstring FireFontNameAtLocation( REALcontrolInstance control, int location )
 int FireFontSizeAtLocation( REALcontrolInstance control, int location )
 {
 	RBInteger (* fp)(REALcontrolInstance, RBInteger);
-	fp = (RBInteger (*)(REALcontrolInstance, RBInteger))REALGetEventInstance( control, &sInputCanvasEvents[5] );
+	fp = (RBInteger (*)(REALcontrolInstance, RBInteger))GetEventHook( control, &sDesktopInputCanvasEvents[5], &sInputCanvasEvents[5] );
 	if (fp) {
 		return fp( control, location );
 	}
@@ -420,7 +509,7 @@ int FireFontSizeAtLocation( REALcontrolInstance control, int location )
 REALobject FireIncompleteTextRange( REALcontrolInstance control )
 {
 	REALobject  (* fp)(REALcontrolInstance);
-	fp = (REALobject  (*)(REALcontrolInstance))REALGetEventInstance( control, &sInputCanvasEvents[6] );
+	fp = (REALobject  (*)(REALcontrolInstance))GetEventHook( control, &sDesktopInputCanvasEvents[6], &sInputCanvasEvents[6] );
 	if (fp) {
 		return fp( control );
 	}
@@ -446,7 +535,7 @@ void FireSetIncompleteText( REALcontrolInstance control, REALstring text,
 	REALobject replacementRange, REALobject relativeSelection )
 {
 	void  (* fp)(REALcontrolInstance, REALstring, REALobject, REALobject);
-	fp = (void  (*)(REALcontrolInstance, REALstring, REALobject, REALobject))REALGetEventInstance( control, &sInputCanvasEvents[7] );
+	fp = (void  (*)(REALcontrolInstance, REALstring, REALobject, REALobject))GetEventHook( control, &sDesktopInputCanvasEvents[7], &sInputCanvasEvents[7] );
 	if (fp) {
 		fp( control, text, replacementRange, relativeSelection );
 	}
@@ -465,7 +554,7 @@ void FireSetIncompleteText( REALcontrolInstance control, REALstring text,
 void FireInsertText( REALcontrolInstance control, REALstring text, REALobject range )
 {
 	void  (* fp)(REALcontrolInstance, REALstring, REALobject);
-	fp = (void  (*)(REALcontrolInstance, REALstring, REALobject))REALGetEventInstance( control, &sInputCanvasEvents[8] );
+	fp = (void  (*)(REALcontrolInstance, REALstring, REALobject))GetEventHook( control, &sDesktopInputCanvasEvents[8], &sInputCanvasEvents[8] );
 	if (fp) {
 		fp( control, text, range );
 	}
@@ -481,7 +570,7 @@ void FireInsertText( REALcontrolInstance control, REALstring text, REALobject ra
 bool FireIsEditable( REALcontrolInstance control )
 {
 	RBBoolean (* fp)(REALcontrolInstance);
-	fp = (RBBoolean (*)(REALcontrolInstance))REALGetEventInstance( control, &sInputCanvasEvents[9] );
+	fp = (RBBoolean (*)(REALcontrolInstance))GetEventHook( control, &sDesktopInputCanvasEvents[9], &sInputCanvasEvents[9] );
 	if (fp) {
 		return fp( control );
 	}
@@ -492,7 +581,7 @@ bool FireIsEditable( REALcontrolInstance control )
 bool FireKeyFallsThrough( REALcontrolInstance control, REALstring key )
 {
 	RBBoolean (* fp)(REALcontrolInstance, REALstring);
-	fp = (RBBoolean (*)(REALcontrolInstance, REALstring))REALGetEventInstance( control, &sInputCanvasEvents[10] );
+	fp = (RBBoolean (*)(REALcontrolInstance, REALstring))GetEventHook( control, &sDesktopInputCanvasEvents[10], &sInputCanvasEvents[10] );
 	if (fp) {
 		return fp( control, key );
 	}
@@ -508,6 +597,19 @@ static REALobject CreateRectObject( Rect rect )
 	typedef void (* ConstructorTy)( REALobject, RBInteger, RBInteger, RBInteger, RBInteger );
 	
 	REALobject rectObject = REALnewInstance( sRectClass );
+	ConstructorTy constructor = (ConstructorTy)REALLoadObjectMethod( rectObject, "Constructor( x as integer, y as integer, w as integer, h as integer)" );
+	constructor( rectObject, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
+	return rectObject;
+}
+
+/**
+ * Converts a Rect into a Xojo.Rect object.
+ */
+static REALobject CreateXojoRectObject( Rect rect )
+{
+	typedef void (* ConstructorTy)( REALobject, RBInteger, RBInteger, RBInteger, RBInteger );
+	
+	REALobject rectObject = REALnewInstance( sXojoRectClass );
 	ConstructorTy constructor = (ConstructorTy)REALLoadObjectMethod( rectObject, "Constructor( x as integer, y as integer, w as integer, h as integer)" );
 	constructor( rectObject, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top );
 	return rectObject;
@@ -545,11 +647,16 @@ void FirePaint( REALcontrolInstance control, REALgraphics context, const Rect *r
 	}
 
 	void  (* fp)(REALcontrolInstance, REALgraphics, REALarray);
-	fp = (void  (*)(REALcontrolInstance, REALgraphics, REALarray))REALGetEventInstance( control, &sInputCanvasEvents[11] );
+	fp = (void  (*)(REALcontrolInstance, REALgraphics, REALarray))GetEventHook( control, &sDesktopInputCanvasEvents[11], &sInputCanvasEvents[11] );
 	if (fp) {
 		REALarray rectArray = REALCreateArray( kTypeObject, rectCount - 1 );
 		for (int i = 0; i < rectCount; i++) {
-			REALobject rectObject = CreateRectObject( rects[i] );
+			REALobject rectObject;
+			if (IsDesktopUIControl(control)) {
+				rectObject = CreateXojoRectObject( rects[i] );
+			} else {
+				rectObject = CreateRectObject( rects[i] );
+			}
 			REALSetArrayValue( rectArray, i, rectObject );
 			REALUnlockObject( rectObject );
 		}
@@ -573,7 +680,7 @@ void FirePaint( REALcontrolInstance control, REALgraphics context, const Rect *r
 REALobject FireRectForRange( REALcontrolInstance control, REALobject *range )
 {
 	REALobject  (* fp)(REALcontrolInstance, REALobject*);
-	fp = (REALobject  (*)(REALcontrolInstance, REALobject *))REALGetEventInstance( control, &sInputCanvasEvents[12] );
+	fp = (REALobject  (*)(REALcontrolInstance, REALobject *))GetEventHook( control, &sDesktopInputCanvasEvents[12], &sInputCanvasEvents[12] );
 	if (fp) {
 		return fp( control, range );
 	}
@@ -591,7 +698,7 @@ REALobject FireRectForRange( REALcontrolInstance control, REALobject *range )
 REALobject FireSelectedRange( REALcontrolInstance control )
 {
 	REALobject  (* fp)(REALcontrolInstance);
-	fp = (REALobject  (*)(REALcontrolInstance))REALGetEventInstance( control, &sInputCanvasEvents[13] );
+	fp = (REALobject  (*)(REALcontrolInstance))GetEventHook( control, &sDesktopInputCanvasEvents[13], &sInputCanvasEvents[13] );
 	if (fp) {
 		return fp( control );
 	}
@@ -610,7 +717,7 @@ REALobject FireSelectedRange( REALcontrolInstance control )
 REALstring FireTextForRange( REALcontrolInstance control, REALobject range )
 {
 	REALstring  (* fp)(REALcontrolInstance, REALobject);
-	fp = (REALstring  (*)(REALcontrolInstance, REALobject))REALGetEventInstance( control, &sInputCanvasEvents[14] );
+	fp = (REALstring  (*)(REALcontrolInstance, REALobject))GetEventHook( control, &sDesktopInputCanvasEvents[14], &sInputCanvasEvents[14] );
 	if (fp) {
 		return fp( control, range );
 	}
@@ -628,7 +735,7 @@ REALstring FireTextForRange( REALcontrolInstance control, REALobject range )
 int FireTextLength( REALcontrolInstance control )
 {
 	RBInteger  (* fp)(REALcontrolInstance);
-	fp = (RBInteger  (*)(REALcontrolInstance))REALGetEventInstance( control, &sInputCanvasEvents[15] );
+	fp = (RBInteger  (*)(REALcontrolInstance))GetEventHook( control, &sDesktopInputCanvasEvents[15], &sInputCanvasEvents[15] );
 	if (fp) {
 		return fp( control );
 	}
@@ -646,7 +753,7 @@ int FireTextLength( REALcontrolInstance control )
 // Returns: nothing
 static void Initializer( REALcontrolInstance control )
 {
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 #if COCOA
 	if (REALinRuntime()) {
 		data->view = [[XOJTextInputView alloc] initWithControlInstance:control];
@@ -666,7 +773,7 @@ static void Initializer( REALcontrolInstance control )
 // Returns: nothing
 static void CloseEvent( REALcontrolInstance control )
 {
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 #if COCOA
 	[data->view cleanup];
 	[data->view release];
@@ -686,7 +793,7 @@ static void CloseEvent( REALcontrolInstance control )
 static void OpenEvent( REALcontrolInstance control )
 {
 #if WINDOWS || WIDGET_GTK
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 	data->view->Setup();
 #endif
 }
@@ -888,7 +995,7 @@ static RBBoolean KeyDownEvent( REALcontrolInstance control, int charCode, int ke
 #if WIDGET_GTK
 static RBBoolean UnfilteredKeyDownEvent( REALcontrolInstance control, int keyCode, int modifiers )
 {
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 	data->view->KeyDown();
 	return false;
 }
@@ -903,7 +1010,7 @@ static RBBoolean UnfilteredKeyDownEvent( REALcontrolInstance control, int keyCod
 // Returns: nothing
 static void InvalidateTextRects( REALcontrolInstance control )
 {
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 #if COCOA
 	[[data->view inputContext] invalidateCharacterCoordinates];
 #endif
@@ -912,14 +1019,14 @@ static void InvalidateTextRects( REALcontrolInstance control )
 static void LinuxSelectInputMethod( REALcontrolInstance control )
 {
 #if WIDGET_GTK
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 	data->view->SelectInputMethod();
 #endif
 }
 
 static RBBoolean MouseDown( REALcontrolInstance inst, int x, int y, int modifiers )
 {
-	RBBoolean (*fp)(REALcontrolInstance, RBInteger, RBInteger) = (RBBoolean (*)(REALcontrolInstance, RBInteger, RBInteger))REALGetEventInstance( inst, &sInputCanvasEvents[16] );
+	RBBoolean (*fp)(REALcontrolInstance, RBInteger, RBInteger) = (RBBoolean (*)(REALcontrolInstance, RBInteger, RBInteger))GetEventHook( inst, &sDesktopInputCanvasEvents[16], &sInputCanvasEvents[16] );
 	if (fp) {
 		Rect rBounds;
 		REALGetControlBounds( inst, &rBounds );
@@ -932,7 +1039,7 @@ static RBBoolean MouseDown( REALcontrolInstance inst, int x, int y, int modifier
 
 static void MouseDrag( REALcontrolInstance inst, int x, int y )
 {
-	void (*fp)(REALcontrolInstance, RBInteger, RBInteger) = (void (*)(REALcontrolInstance, RBInteger, RBInteger))REALGetEventInstance( inst, &sInputCanvasEvents[17] );
+	void (*fp)(REALcontrolInstance, RBInteger, RBInteger) = (void (*)(REALcontrolInstance, RBInteger, RBInteger))GetEventHook( inst, &sDesktopInputCanvasEvents[17], &sInputCanvasEvents[17] );
 	if (fp) {
 		Rect rBounds;
 		REALGetControlBounds( inst, &rBounds );
@@ -943,7 +1050,7 @@ static void MouseDrag( REALcontrolInstance inst, int x, int y )
 
 static void MouseUp( REALcontrolInstance inst, int x, int y )
 {
-	void (*fp)(REALcontrolInstance, RBInteger, RBInteger) = (void (*)(REALcontrolInstance, RBInteger, RBInteger))REALGetEventInstance( inst, &sInputCanvasEvents[18] );
+	void (*fp)(REALcontrolInstance, RBInteger, RBInteger) = (void (*)(REALcontrolInstance, RBInteger, RBInteger))GetEventHook( inst, &sDesktopInputCanvasEvents[18], &sInputCanvasEvents[18] );
 	if (fp) {
 		Rect rBounds;
 		REALGetControlBounds(inst, &rBounds);
@@ -956,11 +1063,11 @@ static void MouseUp( REALcontrolInstance inst, int x, int y )
 static void GotFocus( REALcontrolInstance control )
 {
 #if WIDGET_GTK
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 	data->view->GotFocus();
 #endif
 
-	void (*fp)(REALcontrolInstance) = (void (*)(REALcontrolInstance))REALGetEventInstance( control, &sInputCanvasEvents[19] );
+	void (*fp)(REALcontrolInstance) = (void (*)(REALcontrolInstance))GetEventHook( control, &sDesktopInputCanvasEvents[19], &sInputCanvasEvents[19] );
 	if (fp) {
 		fp( control );
 	}
@@ -969,18 +1076,18 @@ static void GotFocus( REALcontrolInstance control )
 static void LostFocus( REALcontrolInstance control )
 {
 #if WIDGET_GTK
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 	data->view->LostFocus();
 #endif
 
-	void (*fp)(REALcontrolInstance) = (void (*)(REALcontrolInstance))REALGetEventInstance( control, &sInputCanvasEvents[20] );
+	void (*fp)(REALcontrolInstance) = (void (*)(REALcontrolInstance))GetEventHook( control, &sDesktopInputCanvasEvents[20], &sInputCanvasEvents[20] );
 	if (fp) {
 		fp( control );
 	}
 }
 static void EnableMenuItems( REALcontrolInstance control )
 {
-	void (*fp)(REALcontrolInstance) = (void (*)(REALcontrolInstance))REALGetEventInstance( control, &sInputCanvasEvents[21] );
+	void (*fp)(REALcontrolInstance) = (void (*)(REALcontrolInstance))GetEventHook( control, &sDesktopInputCanvasEvents[21], &sInputCanvasEvents[21] );
 	if (fp) {
 		fp( control );
 	}
@@ -988,10 +1095,20 @@ static void EnableMenuItems( REALcontrolInstance control )
 
 static void *HandleGetter( REALcontrolInstance control )
 {
-	InputCanvasData	*data = (InputCanvasData *)REALGetControlData( control, &sInputCanvasControl );
+	InputCanvasData	*data = (InputCanvasData *)GetControlData( control, &sDesktopInputCanvasControl, &sInputCanvasControl );
 #if COCOA
 	return data->view;
 #else
 	return 0;
 #endif
+}
+
+static void ScaleFactorChanged( REALcontrolInstance control, double newScaleFactor )
+{
+	if (IsDesktopUIControl(control)) {
+		void (*fp)(REALcontrolInstance) = (void (*)(REALcontrolInstance))REALGetEventInstance( control, &sDesktopInputCanvasEvents[22] );
+		if (fp) {
+			fp( control );
+		}
+	}
 }

@@ -21,6 +21,7 @@ class TextInputWindows
 	TextInputWindows( REALcontrolInstance control );
 	~TextInputWindows();
 
+	void InsertBreakCommand();
 	void InsertNewLine();
 	void InsertUnicodeChar( long unicodeChar );
 	void StartComposition( HWND handle );
